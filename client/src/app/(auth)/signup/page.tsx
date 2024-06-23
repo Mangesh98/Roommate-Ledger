@@ -1,13 +1,12 @@
-// Register.tsx
 "use client";
 import React, { useState } from "react";
 import { Form, Input, Button } from "antd";
-import authImage from "../../../../public/authImage.avif";
 import "@/app/styles/login.css";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { signUpAction } from "@/app/lib/actions";
 
-interface SignUpFormValues {
+export interface SignUpFormValues {
 	name: string;
 	email: string;
 	password: string;
@@ -23,21 +22,13 @@ const Register: React.FC = () => {
 		setError(null);
 
 		try {
-			const url = `${process.env.NEXT_PUBLIC_DB_HOST}/register`;
-		
-			const response = await fetch(url, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(values),
-			});
+			const result = await signUpAction(values);
 
-			if (response.ok) {
-				console.log("Registration successful!");
-				// Handle successful registration (e.g., redirect to login page)
-				router.push("/login");
+			if (result.error) {
+				setError(result.error);
 			} else {
-				const errorData = await response.json();
-				setError(errorData.message || "Registration failed");
+				console.log("Registration successful!");
+				router.push("/");
 			}
 		} catch (error) {
 			console.error("Error during registration:", error);
@@ -56,38 +47,41 @@ const Register: React.FC = () => {
 			<div className="login-box">
 				<div className="illustration-wrapper">
 					<Image
-						src={authImage}
+						src="/authImage.avif"
 						width={500}
 						height={500}
 						alt="Picture of the login page"
 					/>
 				</div>
 				<Form
-					name="register-form"
+					name="login-form"
+					initialValues={{ remember: true }}
 					onFinish={onFinish}
 					onFinishFailed={onFinishFailed}
 				>
-					<p className="form-title">Welcome!</p>
+					<p className="form-title">Welcome !</p>
+					{/* <p>Login to the Dashboard</p> */}
 					<p>Register to the Roommate Ledger</p>
 					<Form.Item
 						name="name"
-						rules={[{ required: true, message: "Please input your name!" }]}
+						rules={[{ required: true, message: "Please input your Name!" }]}
 					>
 						<Input placeholder="Name" />
 					</Form.Item>
 					<Form.Item
 						name="email"
-						rules={[{ required: true, message: "Please input your email!" }]}
+						rules={[{ required: true, message: "Please input your Email!" }]}
 					>
 						<Input placeholder="Email" />
 					</Form.Item>
+
 					<Form.Item
 						name="password"
 						rules={[{ required: true, message: "Please input your password!" }]}
 					>
 						<Input.Password placeholder="Password" />
 					</Form.Item>
-					{error && <p className="error-message">{error}</p>}
+
 					<Form.Item>
 						<Button
 							type="primary"
@@ -95,7 +89,7 @@ const Register: React.FC = () => {
 							className="login-form-button"
 							disabled={registering}
 						>
-							{registering ? "Registering..." : "Sign Up"}
+							{registering ? "Logging in..." : "LOGIN"}
 						</Button>
 					</Form.Item>
 				</Form>

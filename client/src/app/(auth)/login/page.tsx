@@ -1,13 +1,12 @@
-// Login.tsx
 "use client";
-import authImage from "../../../../public/authImage.avif";
 import React, { useState } from "react";
 import { Form, Input, Checkbox, Button } from "antd";
 import Image from "next/image";
 import "@/app/styles/login.css";
 import { useRouter } from "next/navigation";
+import { loginAction } from "@/app/lib/actions";
 
-interface LoginFormValues {
+export interface LoginFormValues {
 	email: string;
 	password: string;
 	remember: boolean;
@@ -23,19 +22,13 @@ const Login: React.FC = () => {
 		setError(null);
 
 		try {
-			const url = `${process.env.NEXT_PUBLIC_DB_HOST}/login`;
-			const response = await fetch(url, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(values),
-			});
+			const result = await loginAction(values); // Use the login action
 
-			if (response.ok) {
+			if (result.error) {
+				setError(result.error);
+			} else {
 				console.log("Login successful!");
 				router.push("/");
-			} else {
-				const errorData = await response.json();
-				setError(errorData.message || "Login failed");
 			}
 		} catch (error) {
 			console.error("Error during login:", error);
@@ -54,7 +47,7 @@ const Login: React.FC = () => {
 			<div className="login-box">
 				<div className="illustration-wrapper">
 					<Image
-						src={authImage}
+						src="/authImage.avif"
 						width={500}
 						height={500}
 						alt="Picture of the login page"
