@@ -57,22 +57,44 @@ router.post("/new-entry", auth, async (req, res) => {
 // router.get("/get-my-entry",auth,async(req,res)=>{
 
 // });
-router.get("/get-entry", auth, async (req, res) => {
-	const { room } = req.user;
-
+router.post("/get-all-entry", auth, async (req, res) => {
+	const { room, userId, name } = req.user;
 	try {
 		// Fetch all entries for the user's room
-		const entries = await entryModel
-			.find({ room })
-			.populate("members.userId", "name"); // Populate user details if necessary
+		const entries = await entryModel.find({ room });
 
 		if (!entries) {
 			return res
 				.status(404)
 				.json({ message: "No entries found for this room" });
 		}
+
+		const userData = {
+			roomId: room,
+			name: name,
+			id: userId,
+		};
+		// console.log(userData);
+		res.status(200).json({ entries: entries, user: userData });
+	} catch (error) {
+		console.error("Failed to fetch entries:", error);
+		res.status(500).json({ message: "Server error", error: error.message });
+	}
+});
+router.post("/get-my-entry", auth, async (req, res) => {
+	const { room, userId, name } = req.user;
+	try {
+		// Fetch all entries for the user's room
+		const entries = await entryModel.find({ room, paidBy: userId });
+
+		if (!entries) {
+			return res
+				.status(404)
+				.json({ message: "No entries found for this room" });
+		}
+
 		console.log(entries);
-		res.status(200).json(entries);
+		res.status(200).json({ entries: entries });
 	} catch (error) {
 		console.error("Failed to fetch entries:", error);
 		res.status(500).json({ message: "Server error", error: error.message });

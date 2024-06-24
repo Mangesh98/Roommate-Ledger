@@ -20,7 +20,6 @@ const entrySchema = mongoose.Schema({
 	paidBy: {
 		type: mongoose.Schema.Types.ObjectId,
 		required: true,
-		unique: true,
 	},
 	members: [
 		{

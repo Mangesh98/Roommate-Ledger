@@ -47,10 +47,9 @@ router.post("/register", async (req, res) => {
 	await roomDec.save();
 
 	let token = jwt.sign(
-		{ email: email, userId: user._id,room:roomId },
+		{ email: email, userId: user._id, room: roomId },
 		process.env.JWT_SECRET
 	);
-
 
 	res.cookie("token", token, {
 		httpOnly: true,
@@ -87,7 +86,7 @@ router.post("/login", async (req, res) => {
 	}
 
 	let token = jwt.sign(
-		{ email: email, userId: user._id, room: user.room },
+		{ email: email, userId: user._id, room: user.room, name: user.name },
 		process.env.JWT_SECRET
 	);
 	res.cookie("token", token, {
