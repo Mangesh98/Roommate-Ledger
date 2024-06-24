@@ -1,7 +1,9 @@
-import Link from "next/link";
-import React from "react";
+"use client";
+import React, { useState } from "react";
 
 const MyTable = () => {
+	const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+
 	function getDate(): string {
 		const today: Date = new Date();
 		let dd: number | string = today.getDate();
@@ -21,6 +23,24 @@ const MyTable = () => {
 	}
 
 	const date = getDate();
+
+	const toggleRow = (index: number) => {
+		const newExpandedRows = new Set(expandedRows);
+		if (newExpandedRows.has(index)) {
+			newExpandedRows.delete(index);
+		} else {
+			newExpandedRows.add(index);
+		}
+		setExpandedRows(newExpandedRows);
+	};
+
+	const rows = [
+		{ date, description: "Chicken", price: 400 },
+		{ date, description: "Chicken", price: 400 },
+		{ date, description: "Chicken", price: 400 },
+		{ date, description: "Chicken", price: 400 },
+	];
+
 	return (
 		<div>
 			<div className="relative overflow-x-auto shadow-md sm:rounded-lg">
@@ -40,27 +60,25 @@ const MyTable = () => {
 						</tr>
 					</thead>
 					<tbody>
-						<tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-							<td className="px-6 py-4">{date}</td>
-							<td className="px-6 py-4">Chicken</td>
-							<td className="px-6 py-4">&#8377;400</td>
-						</tr>
-						<tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-							<td className="px-6 py-4">{date}</td>
-							<td className="px-6 py-4">Chicken</td>
-							<td className="px-6 py-4">&#8377;400</td>
-						</tr>
-						<tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-							<td className="px-6 py-4">{date}</td>
-							<td className="px-6 py-4">Chicken</td>
-							<td className="px-6 py-4">&#8377;400</td>
-						</tr>
-						<tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-							<td className="px-6 py-4">{date}</td>
-							<td className="px-6 py-4">Chicken</td>
-							<td className="px-6 py-4">&#8377;400</td>
-						</tr>
-						
+						{rows.map((row, index) => (
+							<React.Fragment key={index}>
+								<tr
+									className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+									onClick={() => toggleRow(index)}
+								>
+									<td className="px-6 py-4">{row.date}</td>
+									<td className="px-6 py-4">{row.description}</td>
+									<td className="px-6 py-4">&#8377;{row.price}</td>
+								</tr>
+								{expandedRows.has(index) && (
+									<tr className="bg-gray-50 dark:bg-gray-700">
+										<td className="px-6 py-4" colSpan={3}>
+											Additional information about {row.description}...
+										</td>
+									</tr>
+								)}
+							</React.Fragment>
+						))}
 					</tbody>
 					<tfoot>
 						<tr className="font-semibold text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 ">
@@ -68,7 +86,9 @@ const MyTable = () => {
 								Total
 							</th>
 							<td className="px-6 py-3"></td>
-							<td className="px-6 py-3">&#8377;1600</td>
+							<td className="px-6 py-3">
+								&#8377;{rows.reduce((sum, row) => sum + row.price, 0)}
+							</td>
 						</tr>
 					</tfoot>
 				</table>

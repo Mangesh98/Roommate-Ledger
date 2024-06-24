@@ -1,18 +1,19 @@
 "use server";
-
+import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { LoginFormValues } from "../(auth)/login/page";
 import { SignUpFormValues } from "../(auth)/signup/page";
 
 export const loginAction = async (formData: LoginFormValues) => {
+	
+	
 	try {
-		const url = `${process.env.NEXT_PUBLIC_DB_HOST}/login`;
+		const url = `${process.env.NEXT_PUBLIC_DB_HOST}/users/login`;
 		const response = await fetch(url, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(formData),
 		});
-
 		if (response.ok) {
 			const data = await response.json();
 			cookies().set("token", data.token);
@@ -20,6 +21,8 @@ export const loginAction = async (formData: LoginFormValues) => {
 			return { error: null }; // Indicate success
 		} else {
 			const errorData = await response.json();
+			console.log(errorData);
+			
 			return { error: errorData.message || "Login failed" }; // Include error message
 		}
 	} catch (error) {
@@ -29,7 +32,7 @@ export const loginAction = async (formData: LoginFormValues) => {
 };
 export const signUpAction = async (formData: SignUpFormValues) => {
 	try {
-		const url = `${process.env.NEXT_PUBLIC_DB_HOST}/register`;
+		const url = `${process.env.NEXT_PUBLIC_DB_HOST}/users/register`;
 
 		const response = await fetch(url, {
 			method: "POST",
@@ -51,9 +54,14 @@ export const signUpAction = async (formData: SignUpFormValues) => {
 		return { error: "An unexpected error occurred. Please try again later." }; // Generic error for client
 	}
 };
+export const logoutAction = async () => {
+	cookies().set("token", "");
+	console.log("Login successful!");
+	redirect("/login");
+};
 export const createRoomAction = async (roomName: String) => {
 	try {
-		const url = `${process.env.NEXT_PUBLIC_DB_HOST}/create-room`;
+		const url = `${process.env.NEXT_PUBLIC_DB_HOST}/room/create-room`;
 		
 		let token=cookies().get("token")?.value;
 		if(!token){
@@ -77,3 +85,30 @@ export const createRoomAction = async (roomName: String) => {
 		return { error: "An unexpected error occurred. Please try again later." }; // Generic error for client
 	}
 };
+export const getRoomDetailsAction = async () => {
+	try {
+		const url = `${process.env.NEXT_PUBLIC_DB_HOST}/room/get-room-details`;
+		
+		let token=cookies().get("token")?.value;
+		if(!token){
+			return { success: false, error: "Unauthorized Access !" };
+		}
+		const response = await fetch(url, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ "token":token }),
+		});
+
+		if (response.ok) {
+			const result = await response.json();
+			return { success: true, members: result.members };
+		} else {
+			return { success: false, error: "Failed to create room" };
+		}
+	} catch (error) {
+		console.error("Error during login:", error);
+		return { error: "An unexpected error occurred. Please try again later." }; // Generic error for client
+	}
+};
+
+

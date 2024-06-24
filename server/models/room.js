@@ -1,6 +1,4 @@
 const mongoose = require("mongoose");
-const dotenv = require("dotenv");
-dotenv.config({ path: ".env" });
 
 const roomSchema = mongoose.Schema({
 	name: {

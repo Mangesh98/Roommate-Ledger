@@ -39,6 +39,9 @@ const GlobalTable = () => {
 							<th scope="col" className="px-6 py-3">
 								Price
 							</th>
+							<th scope="col" className="px-6 py-3">
+								Status
+							</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -52,6 +55,17 @@ const GlobalTable = () => {
 							</th>
 							<td className="px-6 py-4">Chicken</td>
 							<td className="px-6 py-4">&#8377;400</td>
+							<td className="px-6 py-4">
+								<div className="flex items-center h-5">
+									<input
+										id="remember"
+										type="checkbox"
+										value=""
+										className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+										required
+									/>
+								</div>
+							</td>
 						</tr>
 						<tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
 							<td className="px-6 py-4">{date}</td>
@@ -63,6 +77,17 @@ const GlobalTable = () => {
 							</th>
 							<td className="px-6 py-4">Vegetable&apos;s</td>
 							<td className="px-6 py-4">&#8377;100</td>
+							<td className="px-6 py-4">
+								<div className="flex items-center h-5">
+									<input
+										id="remember"
+										type="checkbox"
+										value=""
+										className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+										required
+									/>
+								</div>
+							</td>
 						</tr>
 						<tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
 							<td className="px-6 py-4">{date}</td>
@@ -74,6 +99,17 @@ const GlobalTable = () => {
 							</th>
 							<td className="px-6 py-4">Vegetable&apos;s</td>
 							<td className="px-6 py-4">&#8377;100</td>
+							<td className="px-6 py-4">
+								<div className="flex items-center h-5">
+									<input
+										id="remember"
+										type="checkbox"
+										value=""
+										className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+										required
+									/>
+								</div>
+							</td>
 						</tr>
 						<tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
 							<td className="px-6 py-4">{date}</td>
@@ -85,6 +121,18 @@ const GlobalTable = () => {
 							</th>
 							<td className="px-6 py-4">Vegetable&apos;s</td>
 							<td className="px-6 py-4">&#8377;100</td>
+							<td className="px-6 py-4">
+								<div className="flex items-center h-5">
+									<input
+										id="remember"
+										type="checkbox"
+										value=""
+										className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+										required
+									/>
+    
+								</div>
+							</td>
 						</tr>
 					</tbody>
 					<tfoot>
@@ -95,6 +143,7 @@ const GlobalTable = () => {
 							<td className="px-6 py-3"></td>
 							<td className="px-6 py-3"></td>
 							<td className="px-6 py-3">&#8377;700</td>
+							<td className="px-6 py-4"></td>
 						</tr>
 					</tfoot>
 				</table>

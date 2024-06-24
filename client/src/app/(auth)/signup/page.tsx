@@ -10,6 +10,7 @@ export interface SignUpFormValues {
 	name: string;
 	email: string;
 	password: string;
+	room: string;
 }
 
 const Register: React.FC = () => {
@@ -67,6 +68,12 @@ const Register: React.FC = () => {
 						rules={[{ required: true, message: "Please input your Name!" }]}
 					>
 						<Input placeholder="Name" />
+					</Form.Item>
+					<Form.Item
+						name="room"
+						rules={[{ required: true, message: "Please input your Room Name!" }]}
+					>
+						<Input placeholder="Homies" />
 					</Form.Item>
 					<Form.Item
 						name="email"

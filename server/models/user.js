@@ -25,6 +25,10 @@ const userSchema = mongoose.Schema({
 		type: String,
 		required: true,
 	},
+	room: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref:"room",
+	},
 });
 
 module.exports = mongoose.model("user", userSchema);
