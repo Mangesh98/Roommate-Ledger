@@ -23,10 +23,12 @@ app.use(bodyParser.json());
 // Import routes
 const usersRoutes = require("./routes/usersRoute");
 const roomRoutes = require("./routes/roomRoute");
+const entryRoutes = require("./routes/entryRoute");
 
 // Use routes
 app.use("/users", usersRoutes);
 app.use("/room", roomRoutes);
+app.use("/entry", entryRoutes);
 
 app.get("/", (req, res) => {
 	res.send("Hello World!");

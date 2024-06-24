@@ -20,7 +20,6 @@ const Login: React.FC = () => {
 	const onFinish = async (values: LoginFormValues) => {
 		setLoggingIn(true);
 		setError(null);
-		console.log("inside login component");
 		try {
 			const result = await loginAction(values); // Use the login action
 

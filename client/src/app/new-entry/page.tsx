@@ -1,13 +1,25 @@
 "use client";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { getRoomDetailsAction } from "../lib/actions";
+import { createEntryAction, getRoomDetailsAction } from "../lib/actions";
+import { useRouter } from "next/navigation";
+
+// Define interface for form data
+export interface EntryFormData {
+    description: string;
+    price?: number;
+    date: string;
+    selectedMembers: string[];
+}
 
 const NewEntry = () => {
-	const [description, setDescription] = useState("");
-	const [price, setPrice] = useState<number | undefined>(undefined);
-	const [date, setDate] = useState<string>(getCurrentDate());
-	const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+	const router = useRouter();
+	const [formData, setFormData] = useState<EntryFormData>({
+		description: "",
+		price: undefined,
+		date: getCurrentDate(),
+		selectedMembers: [],
+	});
 	const [roomMembers, setRoomMembers] = useState<any[]>([]);
 
 	useEffect(() => {
@@ -15,7 +27,6 @@ const NewEntry = () => {
 			try {
 				const roomDetails = await getRoomDetailsAction();
 				setRoomMembers(roomDetails.members);
-				console.log(roomMembers);
 			} catch (error) {
 				console.error("Failed to fetch members:", error);
 			}
@@ -33,21 +44,49 @@ const NewEntry = () => {
 		return `${year}-${month}-${day}`;
 	}
 
+	// Handle input changes
+	const handleChange = (
+		e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+	) => {
+		const { name, value } = e.target;
+		setFormData({
+			...formData,
+			[name]: value,
+		});
+	};
+
+	// Handle member checkbox changes
 	const handleMemberChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const memberId = event.target.value;
-
 		if (event.target.checked) {
-			setSelectedMembers([...selectedMembers, memberId]);
+			setFormData({
+				...formData,
+				selectedMembers: [...formData.selectedMembers, memberId],
+			});
 		} else {
-			setSelectedMembers(selectedMembers.filter((id) => id !== memberId));
+			setFormData({
+				...formData,
+				selectedMembers: formData.selectedMembers.filter(
+					(id) => id !== memberId
+				),
+			});
 		}
 	};
 
-	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+	// Handle form submission
+	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
-		// Handle form submission logic here
-		console.log("Form submitted");
-		console.log("Selected members:", selectedMembers);
+		try {
+			const response = await createEntryAction(formData);
+			if(!response.success){
+				console.log(response.error);
+			}else{
+				console.log(response.message);
+				router.push("/");
+			}
+		} catch (error) {
+			console.error("Failed to submit form:", error);
+		}
 	};
 
 	return (
@@ -70,9 +109,10 @@ const NewEntry = () => {
 					</label>
 					<textarea
 						id="description"
+						name="description"
 						rows={4}
-						value={description}
-						onChange={(e) => setDescription(e.target.value)}
+						value={formData.description}
+						onChange={handleChange}
 						className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
 						placeholder="Write your description..."
 					></textarea>
@@ -88,8 +128,8 @@ const NewEntry = () => {
 						type="number"
 						id="price"
 						name="price"
-						value={price || ""}
-						onChange={(e) => setPrice(Number(e.target.value))}
+						value={formData.price || ""}
+						onChange={handleChange}
 						className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
 						required
 						placeholder="₹10"
@@ -106,8 +146,8 @@ const NewEntry = () => {
 						type="date"
 						id="date"
 						name="date"
-						value={date}
-						onChange={(e) => setDate(e.target.value)}
+						value={formData.date}
+						onChange={handleChange}
 						max={getCurrentDate()}
 						className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
 						required
@@ -124,9 +164,10 @@ const NewEntry = () => {
 								<input
 									type="checkbox"
 									id={member.userId}
+									name={member.userId}
 									value={member.userId}
 									className="hidden peer"
-									checked={selectedMembers.includes(member.userId)}
+									checked={formData.selectedMembers.includes(member.userId)}
 									onChange={handleMemberChange}
 								/>
 								<label
@@ -155,5 +196,3 @@ const NewEntry = () => {
 };
 
 export default NewEntry;
-
-
