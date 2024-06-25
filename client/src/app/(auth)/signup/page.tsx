@@ -4,7 +4,7 @@ import { Form, Input, Button } from "antd";
 import "@/app/styles/login.css";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { signUpAction } from "@/app/lib/actions";
+import { signUpAction } from "@/app/lib/usersAction";
 
 export interface SignUpFormValues {
 	name: string;

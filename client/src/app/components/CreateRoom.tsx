@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, FormEvent } from "react";
-import { createRoomAction } from "../lib/actions";
+import { createRoomAction } from "../lib/entryActions";
 
 const CreateRoom: React.FC = () => {
 	const [roomName, setRoomName] = useState<string>("");

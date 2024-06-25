@@ -5,7 +5,6 @@ const auth = require("../lib/auth");
 const { updateLedger } = require("./ledgerRoute");
 const router = express.Router();
 
-
 router.post("/new-entry", auth, async (req, res) => {
 	const { date, description, price } = req.body.data;
 	const { userId, room } = req.user;

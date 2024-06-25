@@ -1,15 +1,16 @@
 "use client";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { createEntryAction, getRoomDetailsAction } from "../lib/actions";
+import { createEntryAction } from "../lib/entryActions";
+import { getRoomDetailsAction } from "../lib/roomAction";
 import { useRouter } from "next/navigation";
 
 // Define interface for form data
 export interface EntryFormData {
-    description: string;
-    price?: number;
-    date: string;
-    selectedMembers: string[];
+	description: string;
+	price?: number;
+	date: string;
+	selectedMembers: string[];
 }
 
 const NewEntry = () => {
@@ -78,9 +79,9 @@ const NewEntry = () => {
 		event.preventDefault();
 		try {
 			const response = await createEntryAction(formData);
-			if(!response.success){
+			if (!response.success) {
 				console.log(response.error);
-			}else{
+			} else {
 				console.log(response.message);
 				router.push("/");
 			}

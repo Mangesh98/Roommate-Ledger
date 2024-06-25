@@ -3,7 +3,6 @@ const ledgerModel = require("../models/ledger");
 const auth = require("../lib/auth");
 const router = express.Router();
 
- 
 async function updateLedger(newEntry) {
 	try {
 		const { room, paidBy, members, amount } = newEntry;
@@ -60,7 +59,7 @@ async function updateLedger(newEntry) {
 				const { userId, userName } = member;
 
 				if (userId.toString() === paidBy.toString()) {
-					console.log("Inside receivable :", userName);
+					// console.log("Inside receivable :", userName);
 					// Update receivable amount for the user who paid
 					await Promise.all(
 						members.map(async (member) => {
@@ -72,12 +71,12 @@ async function updateLedger(newEntry) {
 									},
 									{ new: true }
 								);
-								console.log("Updated ledger for receivable:", updatedLedger);
+								// console.log("Updated ledger for receivable:", updatedLedger);
 							}
 						})
 					);
 				} else {
-					console.log("Inside payable :", userName);
+					// console.log("Inside payable :", userName);
 					// Update payable amount for other members
 					const updatedLedger = await ledgerModel.findOneAndUpdate(
 						{ room, userId, "members.userId": paidBy },
@@ -86,12 +85,12 @@ async function updateLedger(newEntry) {
 						},
 						{ new: true }
 					);
-					console.log("Updated ledger for payable:", updatedLedger);
+					// console.log("Updated ledger for payable:", updatedLedger);
 				}
 			})
 		);
 
-		console.log("Ledger updated successfully");
+		// console.log("Ledger updated successfully");
 	} catch (error) {
 		console.error("Failed to update ledger:", error);
 		throw error;

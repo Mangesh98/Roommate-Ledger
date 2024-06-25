@@ -4,7 +4,7 @@ import { Form, Input, Checkbox, Button } from "antd";
 import Image from "next/image";
 import "@/app/styles/login.css";
 import { useRouter } from "next/navigation";
-import { loginAction } from "@/app/lib/actions";
+import { loginAction } from "@/app/lib/usersAction";
 
 export interface LoginFormValues {
 	email: string;

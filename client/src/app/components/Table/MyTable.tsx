@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Member, Row } from "./GlobalTable";
-import {  getMyEntryAction } from "@/app/lib/actions";
+import { getMyEntryAction } from "@/app/lib/entryActions";
 
 const MyTable = () => {
 	const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
@@ -43,7 +43,7 @@ const MyTable = () => {
 	if (loading) {
 		return <div>Loading...</div>;
 	}
-// My Table & Global Table Implemented 
+	// My Table & Global Table Implemented
 	return (
 		<div>
 			<div className="relative overflow-x-auto shadow-md sm:rounded-lg">

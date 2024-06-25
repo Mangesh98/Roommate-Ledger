@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import React from "react";
-import { logoutAction } from "../lib/actions";
+import { logoutAction } from "../lib/usersAction";
 
 const Navbar = () => {
 	async function logout() {

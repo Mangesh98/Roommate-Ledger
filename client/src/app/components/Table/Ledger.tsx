@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { getLedger } from "@/app/lib/actions";
+import { getLedger } from "@/app/lib/ledgerAction";
 
 interface Member {
 	userId: string;
@@ -92,7 +92,7 @@ const Ledger = () => {
 							ledger.members.map((member) => (
 								<tr
 									key={member._id}
-									className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+									className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 "
 								>
 									<td className="px-6 py-4">{member.userName}</td>
 									<td className="px-6 py-4">&#8377;{member.payable}</td>
