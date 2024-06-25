@@ -7,7 +7,7 @@ export interface Member {
 	userName: string;
 	paidStatus: boolean;
 }
-interface User {
+interface CurrentUser {
 	id: string;
 	name: string;
 	roomId: string;
@@ -26,15 +26,16 @@ export interface Row {
 const GlobalTable = () => {
 	const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
 	const [rows, setRows] = useState<Row[]>([]);
-	const [user, setUser] = useState<User[]>([]);
+	const [currentUser, setCurrentUser] = useState<CurrentUser[]>([]);
 	const [loading, setLoading] = useState<boolean>(true);
 
 	useEffect(() => {
 		const fetchEntries = async () => {
 			try {
 				const response = await getEntryAction();
+
 				setRows(response.data);
-				setUser(response.user);
+				setCurrentUser(response.user);
 			} catch (error) {
 				console.error("Failed to fetch entries:", error);
 			} finally {
@@ -123,7 +124,8 @@ const GlobalTable = () => {
 									</td> */}
 									<td className="px-6 py-4">
 										{row.members.some(
-											(member) => member.userId === user.id && member.paidStatus
+											(member) =>
+												member.userId === currentUser.id && member.paidStatus
 										) ? (
 											<div className="flex items-center h-5">
 												{/* Show some indicator here that they paid */}

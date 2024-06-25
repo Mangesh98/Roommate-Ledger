@@ -2,11 +2,13 @@ const express = require("express");
 const entryModel = require("../models/entry");
 const userModel = require("../models/user");
 const auth = require("../lib/auth");
+const { updateLedger } = require("./ledgerRoute");
 const router = express.Router();
+
 
 router.post("/new-entry", auth, async (req, res) => {
 	const { date, description, price } = req.body.data;
-	const { userId, room, fullName } = req.user;
+	const { userId, room } = req.user;
 	let { selectedMembers } = req.body.data;
 	selectedMembers.push(userId);
 
@@ -35,7 +37,7 @@ router.post("/new-entry", auth, async (req, res) => {
 			return member;
 		});
 
-		console.log(members);
+		// console.log(members);
 
 		// Create new entry
 		const newEntry = await entryModel.create({
@@ -46,7 +48,10 @@ router.post("/new-entry", auth, async (req, res) => {
 			paidBy: userId,
 			members: members,
 		});
-		// console.log(newEntry);
+
+		// Update Ledger
+		await updateLedger(newEntry);
+
 		res.status(201).json({ message: "New Entry Created Successfully" });
 	} catch (error) {
 		console.error("Failed to create new entry:", error);
@@ -54,9 +59,6 @@ router.post("/new-entry", auth, async (req, res) => {
 	}
 });
 
-// router.get("/get-my-entry",auth,async(req,res)=>{
-
-// });
 router.post("/get-all-entry", auth, async (req, res) => {
 	const { room, userId, name } = req.user;
 	try {
@@ -93,7 +95,7 @@ router.post("/get-my-entry", auth, async (req, res) => {
 				.json({ message: "No entries found for this room" });
 		}
 
-		console.log(entries);
+		// console.log(entries);
 		res.status(200).json({ entries: entries });
 	} catch (error) {
 		console.error("Failed to fetch entries:", error);

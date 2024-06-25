@@ -24,11 +24,13 @@ app.use(bodyParser.json());
 const usersRoutes = require("./routes/usersRoute");
 const roomRoutes = require("./routes/roomRoute");
 const entryRoutes = require("./routes/entryRoute");
+const {router: ledgerRoutes} = require("./routes/ledgerRoute");
 
 // Use routes
 app.use("/users", usersRoutes);
 app.use("/room", roomRoutes);
 app.use("/entry", entryRoutes);
+app.use("/ledger", ledgerRoutes);
 
 app.get("/", (req, res) => {
 	res.send("Hello World!");

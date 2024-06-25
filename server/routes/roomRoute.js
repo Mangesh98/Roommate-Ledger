@@ -13,12 +13,12 @@ router.post("/create-room", auth, async (req, res) => {
 		userEmail: email,
 	};
 
-	console.log(roomName, members);
+	// console.log(roomName, members);
 	const room = await roomModel.create({
 		name: roomName,
 		members,
 	});
-	console.log(room);
+	// console.log(room);
 	res.status(201).json({ message: "Room created successfully", room });
 });
 
@@ -41,7 +41,7 @@ router.post("/get-room-details", auth, async (req, res) => {
 				userName: member.userName,
 				_id: member._id,
 			}));
-			console.log(members);
+			// console.log(members);
 		res.status(200).json({ members: members });
 	} catch (error) {
 		res.status(500).json({ message: "Server error", error: error.message });

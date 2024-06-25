@@ -2,6 +2,7 @@ import React from "react";
 import GlobalTable from "./Table/GlobalTable";
 import MyTable from "./Table/MyTable";
 import Link from "next/link";
+import Ledger from "./Table/Ledger";
 
 const Room = () => {
 	return (
@@ -21,6 +22,9 @@ const Room = () => {
 			</div>
 			<div className="globalTable mt-6">
 				<GlobalTable />
+			</div>
+			<div className="globalTable mt-6">
+				<Ledger />
 			</div>
 		</div>
 	);
