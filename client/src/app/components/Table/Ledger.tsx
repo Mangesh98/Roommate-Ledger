@@ -27,40 +27,30 @@ const Ledger = () => {
 	const [ledgers, setLedgers] = useState<Ledger[]>([]);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [currentUser, setCurrentUser] = useState<CurrentUser[]>([]);
+	async function fetchLedgerEntries() {
+		try {
+			const response = await getLedger();
+			// console.log("Without filter",response.data);
+			setCurrentUser(response.user);
 
+			// Remove the current user's record from the members array
+			const filteredLedgers = response.data.map((ledger: Ledger) => ({
+				...ledger,
+				members: ledger.members.filter(
+					(member) => member.userId !== response.user.id
+				),
+			}));
+			// console.log("with filter", filteredLedgers);
+
+			setLedgers(filteredLedgers);
+		} catch (error) {
+			console.error("Failed to fetch entries:", error);
+		}
+	}
 	useEffect(() => {
-		const fetchEntries = async () => {
-			try {
-				const response = await getLedger();
-				console.log("Without filter",response.data);
-				setCurrentUser(response.user);
-
-				// Remove the current user's record from the members array
-				const filteredLedgers = response.data.map((ledger: Ledger) => ({
-					...ledger,
-					members: ledger.members.filter(
-						(member) => member.userId !== response.user.id
-					),
-				}));
-                console.log("with filter", filteredLedgers);
-                
-				setLedgers(filteredLedgers);
-			} catch (error) {
-				console.error("Failed to fetch entries:", error);
-			} finally {
-				setLoading(false);
-			}
-		};
-		fetchEntries();
+		fetchLedgerEntries();
+		setLoading(false);
 	}, []);
-
-	const formatDate = (isoDate: string) => {
-		const date = new Date(isoDate);
-		const day = date.getDate().toString().padStart(2, "0");
-		const month = (date.getMonth() + 1).toString().padStart(2, "0");
-		const year = date.getFullYear().toString();
-		return `${day}-${month}-${year}`;
-	};
 
 	if (loading) {
 		return <div>Loading...</div>;

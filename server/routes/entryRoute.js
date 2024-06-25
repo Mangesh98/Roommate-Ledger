@@ -2,7 +2,7 @@ const express = require("express");
 const entryModel = require("../models/entry");
 const userModel = require("../models/user");
 const auth = require("../lib/auth");
-const { updateLedger } = require("./ledgerRoute");
+const { updateLedger, decreaseReceivable } = require("./ledgerRoute");
 const router = express.Router();
 
 router.post("/new-entry", auth, async (req, res) => {
@@ -98,6 +98,34 @@ router.post("/get-my-entry", auth, async (req, res) => {
 		res.status(200).json({ entries: entries });
 	} catch (error) {
 		console.error("Failed to fetch entries:", error);
+		res.status(500).json({ message: "Server error", error: error.message });
+	}
+});
+
+router.post("/update-entry", auth, async (req, res) => {
+	const { entryId, paidBy, amount } = req.body.data;
+	const { userId } = req.user;
+
+	try {
+		const updatedEntry = await entryModel.findOneAndUpdate(
+			{ _id: entryId, "members.userId": userId },
+			{ $set: { "members.$.paidStatus": true } },
+			{ new: true }
+		);
+
+		if (!updatedEntry) {
+			throw new Error("Entry or member not found");
+		}
+
+		// console.log("Updated Entry:", updatedEntry);
+
+		// Update Ledger
+		const record=await decreaseReceivable(paidBy, userId, amount);
+		// console.log(record);
+
+		res.status(201).json({ message: "Updated Successfully" });
+	} catch (error) {
+		console.error("Failed to create new entry:", error);
 		res.status(500).json({ message: "Server error", error: error.message });
 	}
 });

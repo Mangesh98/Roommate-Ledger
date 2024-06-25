@@ -1,5 +1,6 @@
 "use client";
-import { getEntryAction } from "@/app/lib/entryActions";
+import { getEntryAction, updateEntryAction } from "@/app/lib/entryActions";
+import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 
 export interface Member {
@@ -16,34 +17,24 @@ export interface Row {
 	_id: string;
 	date: string;
 	name: string;
+	room: string;
 	description: string;
 	amount: number;
 	status: boolean;
 	paidBy: string;
 	members: Member[];
 }
-
+export interface UpdateEntry {
+	entryId: string;
+	paidBy: string;
+	amount: number;
+}
 const GlobalTable = () => {
+	const router = useRouter();
 	const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
 	const [rows, setRows] = useState<Row[]>([]);
 	const [currentUser, setCurrentUser] = useState<CurrentUser[]>([]);
 	const [loading, setLoading] = useState<boolean>(true);
-
-	useEffect(() => {
-		const fetchEntries = async () => {
-			try {
-				const response = await getEntryAction();
-
-				setRows(response.data);
-				setCurrentUser(response.user);
-			} catch (error) {
-				console.error("Failed to fetch entries:", error);
-			} finally {
-				setLoading(false);
-			}
-		};
-		fetchEntries();
-	}, []);
 
 	const formatDate = (isoDate: string) => {
 		const date = new Date(isoDate);
@@ -62,13 +53,40 @@ const GlobalTable = () => {
 		}
 		setExpandedRows(newExpandedRows);
 	};
+	async function fetchEntries() {
+		try {
+			const response = await getEntryAction();
 
-	function handleCheckboxChange(index: number) {}
+			setRows(response.data);
+			setCurrentUser(response.user);
+		} catch (error) {
+			console.error("Failed to fetch entries:", error);
+		} finally {
+			setLoading(false);
+		}
+	}
+	async function handleCheckboxChange(data: Row) {
+		const confirmed = confirm("Update the record as paid ?");
+		if (confirmed) {
+			const updateRecord: UpdateEntry = {
+				entryId: data._id,
+				paidBy: data.paidBy,
+				amount: Math.round(data.amount / data.members.length),
+			};
+			const response = await updateEntryAction(updateRecord);
+			// window.location.reload();
+			console.log(response);
+			await fetchEntries();
+		}
+	}
+	useEffect(() => {
+		fetchEntries();
+	}, []);
 
 	if (loading) {
 		return <div>Loading...</div>;
 	}
-
+	
 	return (
 		<div>
 			<div className="relative overflow-x-auto shadow-md sm:rounded-lg">
@@ -134,7 +152,7 @@ const GlobalTable = () => {
 													id={`remember_${index}`}
 													type="checkbox"
 													checked={row.status}
-													onChange={() => handleCheckboxChange(index)}
+													onChange={() => handleCheckboxChange(row)}
 													className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
 													readOnly
 												/>

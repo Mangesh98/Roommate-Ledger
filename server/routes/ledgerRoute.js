@@ -97,6 +97,33 @@ async function updateLedger(newEntry) {
 	}
 }
 
+async function decreaseReceivable(userId, memberId, amount) {
+	try {
+		const updatedReceivable = await ledgerModel.findOneAndUpdate(
+			{ userId: userId, "members.userId": memberId },
+			{ $inc: { "members.$.receivable": -amount } },
+			{ new: true }
+		);
+		const updatedPayable = await ledgerModel.findOneAndUpdate(
+			{ userId: memberId, "members.userId": userId },
+			{ $inc: { "members.$.payable": -amount } },
+			{ new: true }
+		);
+		
+
+		if (!updatedReceivable) {
+			throw new Error("Ledger or member not found");
+		}
+
+		// console.log("Updated Ledger:", updatedLedger);
+		return updatedReceivable;
+	} catch (error) {
+		console.error("Error updating receivable:", error);
+		throw error;
+	}
+}
+
+
 router.post("/get-ledger", auth, async (req, res) => {
 	const { room, userId, name } = req.user;
 	try {
@@ -122,4 +149,4 @@ router.post("/get-ledger", auth, async (req, res) => {
 	}
 });
 
-module.exports = { router, updateLedger };
+module.exports = { router, updateLedger,decreaseReceivable };
