@@ -78,22 +78,34 @@ const Ledger = () => {
 						</tr>
 					</thead>
 					<tbody>
-						{ledgers.flatMap((ledger) =>
-							ledger.members.map((member) => (
-								<tr
-									key={member._id}
-									className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 "
+						{ledgers.length === 0 ? (
+							<tr>
+								<td
+									colSpan={4}
+									className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 px-6 py-4 text-center"
 								>
-									<td className="px-6 py-4">{member.userName}</td>
-									<td className="px-6 py-4">&#8377;{member.payable}</td>
-									<td className="px-6 py-4">&#8377;{member.receivable}</td>
-									<td className="px-6 py-4">
-										&#8377;{member.receivable - member.payable}
-									</td>
-								</tr>
-							))
+									No data available
+								</td>
+							</tr>
+						) : (
+							ledgers.flatMap((ledger) =>
+								ledger.members.map((member) => (
+									<tr
+										key={member._id}
+										className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 "
+									>
+										<td className="px-6 py-4">{member.userName}</td>
+										<td className="px-6 py-4">&#8377;{member.payable}</td>
+										<td className="px-6 py-4">&#8377;{member.receivable}</td>
+										<td className="px-6 py-4">
+											&#8377;{member.receivable - member.payable}
+										</td>
+									</tr>
+								))
+							)
 						)}
 					</tbody>
+
 					<tfoot>
 						<tr className="font-semibold text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700">
 							<th scope="row" className="px-6 py-3 text-base">

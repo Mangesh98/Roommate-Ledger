@@ -133,7 +133,7 @@ router.post("/get-ledger", auth, async (req, res) => {
 		if (!ledger) {
 			return res
 				.status(404)
-				.json({ message: "No entries found for this room" });
+				.json({ success: false, message: "No entries found for this room" });
 		}
 
 		const userData = {
@@ -142,10 +142,12 @@ router.post("/get-ledger", auth, async (req, res) => {
 			id: userId,
 		};
 		// console.log(ledger);
-		res.status(200).json({ ledger: ledger, user: userData });
+		res.status(200).json({ success: true, ledger: ledger, user: userData });
 	} catch (error) {
 		console.error("Failed to fetch ledger:", error);
-		res.status(500).json({ message: "Server error", error: error.message });
+		res
+			.status(500)
+			.json({ success: false, message: "Server error", error: error.message });
 	}
 });
 

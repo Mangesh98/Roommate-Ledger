@@ -5,6 +5,7 @@ import Image from "next/image";
 import "@/app/styles/login.css";
 import { useRouter } from "next/navigation";
 import { loginAction } from "@/app/lib/usersAction";
+import Link from "next/link";
 
 export interface LoginFormValues {
 	email: string;
@@ -84,6 +85,15 @@ const Login: React.FC = () => {
 						>
 							{loggingIn ? "Logging in..." : "LOGIN"}
 						</Button>
+					</Form.Item>
+					<Form.Item>
+						<Link
+							href="/sign-up"
+							type="primary"
+							className="login-form-button"
+						>
+							SignUp
+						</Link>
 					</Form.Item>
 				</Form>
 			</div>

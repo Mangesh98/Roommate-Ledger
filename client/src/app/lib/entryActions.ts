@@ -2,7 +2,7 @@
 import { cookies } from "next/headers";
 import { EntryFormData } from "../new-entry/page";
 import { UpdateEntry } from "../components/Table/GlobalTable";
-import { message } from "antd";
+import { redirect } from "next/navigation";
 
 export const createEntryAction = async (data: EntryFormData) => {
 	try {
@@ -65,6 +65,7 @@ export const getMyEntryAction = async () => {
 
 		let token = cookies().get("token")?.value;
 		if (!token) {
+			redirect("/sign-in");
 			return { success: false, error: "Unauthorized Access !" };
 		}
 
@@ -73,7 +74,9 @@ export const getMyEntryAction = async () => {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ token: token }),
 		});
-
+		if (response.status == 401) {
+			redirect("/sign-in");
+		}
 		if (response.ok) {
 			const result = await response.json();
 			return { success: true, data: result.entries };
@@ -85,7 +88,7 @@ export const getMyEntryAction = async () => {
 		return { error: "An unexpected error occurred. Please try again later." };
 	}
 };
-export const updateEntryAction = async (data: UpdateEntry) => {
+export const updateEntryAction = async (data: UpdateEntry) => {  
 	try {
 		const url = `${process.env.NEXT_PUBLIC_DB_HOST}/entry/update-entry`;
 
@@ -97,7 +100,7 @@ export const updateEntryAction = async (data: UpdateEntry) => {
 		const response = await fetch(url, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ token: token,data:data }),
+			body: JSON.stringify({ token: token, data: data }),
 		});
 
 		if (response.ok) {

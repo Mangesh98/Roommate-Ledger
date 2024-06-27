@@ -19,7 +19,9 @@ router.post("/create-room", auth, async (req, res) => {
 		members,
 	});
 	// console.log(room);
-	res.status(201).json({ message: "Room created successfully", room });
+	res
+		.status(201)
+		.json({ success: true, message: "Room created successfully", room });
 });
 
 router.post("/get-room-details", auth, async (req, res) => {
@@ -42,9 +44,11 @@ router.post("/get-room-details", auth, async (req, res) => {
 				_id: member._id,
 			}));
 			// console.log(members);
-		res.status(200).json({ members: members });
+		res.status(200).json({ success: true, members: members });
 	} catch (error) {
-		res.status(500).json({ message: "Server error", error: error.message });
+		res
+			.status(500)
+			.json({ success: false, message: "Server error", error: error.message });
 	}
 });
 

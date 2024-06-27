@@ -1,8 +1,8 @@
 "use server";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { LoginFormValues } from "../(auth)/login/page";
-import { SignUpFormValues } from "../(auth)/signup/page";
+import { LoginFormValues } from "../(auth)/sign-in/page";
+import { SignUpFormValues } from "../(auth)/sign-up/page";
 
 export const loginAction = async (formData: LoginFormValues) => {
 	try {
@@ -16,7 +16,7 @@ export const loginAction = async (formData: LoginFormValues) => {
 			const data = await response.json();
 			cookies().set("token", data.token);
 			console.log("Login successful!");
-			return { error: null }; // Indicate success
+			return { error: null };
 		} else {
 			const errorData = await response.json();
 			console.log(errorData);
@@ -55,5 +55,5 @@ export const signUpAction = async (formData: SignUpFormValues) => {
 export const logoutAction = async () => {
 	cookies().set("token", "");
 	console.log("Login successful!");
-	redirect("/login");
+	redirect("/sign-in");
 };

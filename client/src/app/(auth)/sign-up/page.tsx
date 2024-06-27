@@ -5,6 +5,7 @@ import "@/app/styles/login.css";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { signUpAction } from "@/app/lib/usersAction";
+import Link from "next/link";
 
 export interface SignUpFormValues {
 	name: string;
@@ -71,7 +72,9 @@ const Register: React.FC = () => {
 					</Form.Item>
 					<Form.Item
 						name="room"
-						rules={[{ required: true, message: "Please input your Room Name!" }]}
+						rules={[
+							{ required: true, message: "Please input your Room Name!" },
+						]}
 					>
 						<Input placeholder="Homies" />
 					</Form.Item>
@@ -98,6 +101,11 @@ const Register: React.FC = () => {
 						>
 							{registering ? "Logging in..." : "LOGIN"}
 						</Button>
+					</Form.Item>
+					<Form.Item>
+						<Link href="/sign-in" type="primary" className="login-form-button">
+							Sign In
+						</Link>
 					</Form.Item>
 				</Form>
 			</div>

@@ -63,59 +63,70 @@ const MyTable = () => {
 						</tr>
 					</thead>
 					<tbody>
-						{rows.map((row, index) => (
-							<React.Fragment key={row._id}>
-								<tr
-									className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
-									onClick={() => toggleRow(index)}
+						{rows.length === 0 ? (
+							<tr>
+								<td
+									colSpan={4}
+									className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 px-6 py-4 text-center"
 								>
-									<td className="px-6 py-4">{formatDate(row.date)}</td>
-
-									<td className="px-6 py-4">{row.description}</td>
-									<td className="px-6 py-4">&#8377;{row.amount}</td>
-								</tr>
-								{expandedRows.has(index) && (
-									<tr className="bg-gray-50 dark:bg-gray-700">
-										<td className="px-6 py-4" colSpan={6}>
-											<div>
-												<h3 className="font-semibold text-gray-900 dark:text-white">
-													Members:
-												</h3>
-												<ul className="max-w-md space-y-1 text-gray-500 list-inside dark:text-gray-400">
-													{row.members.map((member: Member, idx: number) => (
-														<li key={idx} className="flex items-center">
-															{member.paidStatus ? (
-																<svg
-																	className="w-3.5 h-3.5 me-2 text-green-500 dark:text-green-400 flex-shrink-0"
-																	aria-hidden="true"
-																	xmlns="http://www.w3.org/2000/svg"
-																	fill="currentColor"
-																	viewBox="0 0 20 20"
-																>
-																	<path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z" />
-																</svg>
-															) : (
-																<svg
-																	className="w-3.5 h-3.5 me-2 text-gray-500 dark:text-gray-400 flex-shrink-0"
-																	aria-hidden="true"
-																	xmlns="http://www.w3.org/2000/svg"
-																	fill="currentColor"
-																	viewBox="0 0 20 20"
-																>
-																	<path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z" />
-																</svg>
-															)}
-															{member.userName}
-														</li>
-													))}
-												</ul>
-											</div>
-										</td>
+									No data available
+								</td>
+							</tr>
+						) : (
+							rows.map((row, index) => (
+								<React.Fragment key={row._id}>
+									<tr
+										className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+										onClick={() => toggleRow(index)}
+									>
+										<td className="px-6 py-4">{formatDate(row.date)}</td>
+										<td className="px-6 py-4">{row.description}</td>
+										<td className="px-6 py-4">&#8377;{row.amount}</td>
 									</tr>
-								)}
-							</React.Fragment>
-						))}
+									{expandedRows.has(index) && (
+										<tr className="bg-gray-50 dark:bg-gray-700">
+											<td className="px-6 py-4" colSpan={4}>
+												<div>
+													<h3 className="font-semibold text-gray-900 dark:text-white">
+														Members:
+													</h3>
+													<ul className="max-w-md space-y-1 text-gray-500 list-inside dark:text-gray-400">
+														{row.members.map((member: Member, idx: number) => (
+															<li key={idx} className="flex items-center">
+																{member.paidStatus ? (
+																	<svg
+																		className="w-3.5 h-3.5 me-2 text-green-500 dark:text-green-400 flex-shrink-0"
+																		aria-hidden="true"
+																		xmlns="http://www.w3.org/2000/svg"
+																		fill="currentColor"
+																		viewBox="0 0 20 20"
+																	>
+																		<path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z" />
+																	</svg>
+																) : (
+																	<svg
+																		className="w-3.5 h-3.5 me-2 text-gray-500 dark:text-gray-400 flex-shrink-0"
+																		aria-hidden="true"
+																		xmlns="http://www.w3.org/2000/svg"
+																		fill="currentColor"
+																		viewBox="0 0 20 20"
+																	>
+																		<path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z" />
+																	</svg>
+																)}
+																{member.userName}
+															</li>
+														))}
+													</ul>
+												</div>
+											</td>
+										</tr>
+									)}
+								</React.Fragment>
+							))
+						)}
 					</tbody>
+
 					<tfoot>
 						<tr className="font-semibold text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 ">
 							<th scope="row" className="px-6 py-3 text-base">

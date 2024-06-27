@@ -51,10 +51,14 @@ router.post("/new-entry", auth, async (req, res) => {
 		// Update Ledger
 		await updateLedger(newEntry);
 
-		res.status(201).json({ message: "New Entry Created Successfully" });
+		res
+			.status(201)
+			.json({ success: true, message: "New Entry Created Successfully" });
 	} catch (error) {
 		console.error("Failed to create new entry:", error);
-		res.status(500).json({ message: "Server error", error: error.message });
+		res
+			.status(500)
+			.json({ success: false, message: "Server error", error: error.message });
 	}
 });
 
@@ -67,7 +71,7 @@ router.post("/get-all-entry", auth, async (req, res) => {
 		if (!entries) {
 			return res
 				.status(404)
-				.json({ message: "No entries found for this room" });
+				.json({ success: false, message: "No entries found for this room" });
 		}
 
 		const userData = {
@@ -76,10 +80,12 @@ router.post("/get-all-entry", auth, async (req, res) => {
 			id: userId,
 		};
 		// console.log(userData);
-		res.status(200).json({ entries: entries, user: userData });
+		res.status(200).json({ success: true, entries: entries, user: userData });
 	} catch (error) {
 		console.error("Failed to fetch entries:", error);
-		res.status(500).json({ message: "Server error", error: error.message });
+		res
+			.status(500)
+			.json({ success: false, message: "Server error", error: error.message });
 	}
 });
 router.post("/get-my-entry", auth, async (req, res) => {
@@ -91,14 +97,16 @@ router.post("/get-my-entry", auth, async (req, res) => {
 		if (!entries) {
 			return res
 				.status(404)
-				.json({ message: "No entries found for this room" });
+				.json({ success: false, message: "No entries found for this room" });
 		}
 
 		// console.log(entries);
-		res.status(200).json({ entries: entries });
+		res.status(200).json({ success: true, entries: entries });
 	} catch (error) {
 		console.error("Failed to fetch entries:", error);
-		res.status(500).json({ message: "Server error", error: error.message });
+		res
+			.status(500)
+			.json({ success: false, message: "Server error", error: error.message });
 	}
 });
 
@@ -123,10 +131,12 @@ router.post("/update-entry", auth, async (req, res) => {
 		const record=await decreaseReceivable(paidBy, userId, amount);
 		// console.log(record);
 
-		res.status(201).json({ message: "Updated Successfully" });
+		res.status(201).json({ success: true, message: "Updated Successfully" });
 	} catch (error) {
 		console.error("Failed to create new entry:", error);
-		res.status(500).json({ message: "Server error", error: error.message });
+		res
+			.status(500)
+			.json({ success: false, message: "Server error", error: error.message });
 	}
 });
 
