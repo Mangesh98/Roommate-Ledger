@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { signUpAction } from "@/app/lib/usersAction";
 import Link from "next/link";
+import { toast } from "react-toastify";
 
 export interface SignUpFormValues {
 	name: string;
@@ -27,9 +28,10 @@ const Register: React.FC = () => {
 			const result = await signUpAction(values);
 
 			if (result.error) {
+				toast.success(result.error, { theme: "dark" });
 				setError(result.error);
 			} else {
-				console.log("Registration successful!");
+				toast.success("Registration successful!", { theme: "dark" });
 				router.push("/");
 			}
 		} catch (error) {
@@ -76,7 +78,7 @@ const Register: React.FC = () => {
 							{ required: true, message: "Please input your Room Name!" },
 						]}
 					>
-						<Input placeholder="Homies" />
+						<Input placeholder="Room Name" />
 					</Form.Item>
 					<Form.Item
 						name="email"

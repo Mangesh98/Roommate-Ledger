@@ -6,6 +6,7 @@ import "@/app/styles/login.css";
 import { useRouter } from "next/navigation";
 import { loginAction } from "@/app/lib/usersAction";
 import Link from "next/link";
+import { toast } from "react-toastify";
 
 export interface LoginFormValues {
 	email: string;
@@ -19,15 +20,18 @@ const Login: React.FC = () => {
 	const [error, setError] = useState<string | null>(null);
 
 	const onFinish = async (values: LoginFormValues) => {
+		
 		setLoggingIn(true);
 		setError(null);
 		try {
 			const result = await loginAction(values); // Use the login action
 
 			if (result.error) {
+				toast.error(result.error, { theme: "dark" });
+				toast.success(result.error, { theme: "dark" });
 				setError(result.error);
 			} else {
-				console.log("Login successful!");
+				toast.success("Login successful!", { theme: "dark" });
 				router.push("/");
 			}
 		} catch (error) {
@@ -87,11 +91,7 @@ const Login: React.FC = () => {
 						</Button>
 					</Form.Item>
 					<Form.Item>
-						<Link
-							href="/sign-up"
-							type="primary"
-							className="login-form-button"
-						>
+						<Link href="/sign-up" type="primary" className="login-form-button">
 							SignUp
 						</Link>
 					</Form.Item>

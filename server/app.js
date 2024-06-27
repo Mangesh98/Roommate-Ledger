@@ -8,7 +8,7 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 const corsOptions = {
-	origin: ["https://roommate-ledger.vercel.app/"], // Next.js app's URL
+	origin: [process.env.CLIENT_URL], // Next.js app's URL
 	credentials: true, // Allow cookies for authentication
 	allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
 	methods: "GET, POST", // Allowed HTTP methods

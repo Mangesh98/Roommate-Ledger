@@ -1,6 +1,7 @@
 "use client";
 import { getEntryAction, updateEntryAction } from "@/app/lib/entryActions";
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 
 export interface Member {
 	userId: string;
@@ -55,10 +56,13 @@ const GlobalTable = () => {
 	async function fetchEntries() {
 		try {
 			const response = await getEntryAction();
-
+			if (response.error) {
+				toast.error("Something went Wrong", { theme: "dark" });
+			}
 			setRows(response.data);
-			setCurrentUser(response.user); // Assuming response.user is a single CurrentUser object
+			setCurrentUser(response.user);
 		} catch (error) {
+			toast.error("Failed to fetch entries: " + error, { theme: "dark" });
 			console.error("Failed to fetch entries:", error);
 		} finally {
 			setLoading(false);
@@ -73,7 +77,12 @@ const GlobalTable = () => {
 				paidBy: data.paidBy,
 				amount: Math.round(data.amount / data.members.length),
 			};
-			await updateEntryAction(updateRecord);
+			const updateEntryStatus = await updateEntryAction(updateRecord);
+			if (updateEntryStatus.success) {
+				toast.success("Record updated successfully", { theme: "dark" });
+			} else {
+				toast.error("Something went wrong", { theme: "dark" });
+			}
 			await fetchEntries();
 		}
 	}

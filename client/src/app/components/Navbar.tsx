@@ -3,9 +3,10 @@ import Link from "next/link";
 import React from "react";
 import { logoutAction } from "../lib/usersAction";
 import { usePathname } from "next/navigation";
+import { toast } from "react-toastify";
 
 const Navbar = () => {
-	const pathname = usePathname(); 
+	const pathname = usePathname();
 
 	// Use conditional rendering to show/hide navbar based on pathname
 	const showNavbar = !(pathname === "/sign-in" || pathname === "/sign-up");
@@ -13,6 +14,7 @@ const Navbar = () => {
 	async function logout() {
 		const confirmed = confirm("Are you sure you want to logout?");
 		if (confirmed) {
+			toast.success("Logout successful!", { theme: "dark" });
 			await logoutAction();
 		}
 	}
