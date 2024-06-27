@@ -7,15 +7,15 @@ dotenv.config({ path: ".env" });
 const app = express();
 const port = process.env.PORT || 5000;
 
-const corsOptions = {
-	origin: ["https://roommate-ledger.vercel.app/"], // Next.js app's URL
-	credentials: true, // Allow cookies for authentication
-	allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
-	methods: "GET, POST", // Allowed HTTP methods
-	allowedMethods: ["GET", "POST", "OPTIONS"], // Include OPTIONS for preflight requests
-};
+// const corsOptions = {
+// 	origin: ["https://roommate-ledger.vercel.app/"], // Next.js app's URL
+// 	credentials: true, // Allow cookies for authentication
+// 	allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
+// 	methods: "GET, POST", // Allowed HTTP methods
+// 	allowedMethods: ["GET", "POST", "OPTIONS"], // Include OPTIONS for preflight requests
+// };
 
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
 
 // Parse incoming request bodies as JSON
 app.use(bodyParser.json());
@@ -37,5 +37,5 @@ app.get("/", (req, res) => {
 });
 
 app.listen(port, () => {
-	console.log(`Roommate Ledger server listening at ${corsOptions.origin,port}`);
+	console.log(`Roommate Ledger server listening at ${port}`);
 });
