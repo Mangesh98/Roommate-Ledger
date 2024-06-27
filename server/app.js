@@ -8,7 +8,7 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 const corsOptions = {
-	origin: ["http://localhost:3000"], // Next.js app's URL
+	origin: ["https://roommate-ledger.vercel.app/"], // Next.js app's URL
 	credentials: true, // Allow cookies for authentication
 	allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
 	methods: "GET, POST", // Allowed HTTP methods
@@ -37,5 +37,5 @@ app.get("/", (req, res) => {
 });
 
 app.listen(port, () => {
-	console.log(`Roommate Ledger server listening at http://localhost:${port}`);
+	console.log(`Roommate Ledger server listening at ${corsOptions.origin,port}`);
 });
