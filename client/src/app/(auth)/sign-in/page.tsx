@@ -28,7 +28,6 @@ const Login: React.FC = () => {
 
 			if (result.error) {
 				toast.error(result.error, { theme: "dark" });
-				toast.success(result.error, { theme: "dark" });
 				setError(result.error);
 			} else {
 				toast.success("Login successful!", { theme: "dark" });
