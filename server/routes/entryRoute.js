@@ -128,7 +128,7 @@ router.post("/update-entry", auth, async (req, res) => {
 		// console.log("Updated Entry:", updatedEntry);
 
 		// Update Ledger
-		const record=await decreaseReceivable(paidBy, userId, amount);
+		const record = await decreaseReceivable(paidBy, userId, amount);
 		// console.log(record);
 
 		res.status(201).json({ success: true, message: "Updated Successfully" });

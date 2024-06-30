@@ -34,6 +34,9 @@ const GlobalTable = () => {
 	const [rows, setRows] = useState<Row[]>([]);
 	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
+	const [checkboxStates, setCheckboxStates] = useState<{
+		[key: string]: boolean;
+	}>({});
 
 	const formatDate = (isoDate: string) => {
 		const date = new Date(isoDate);
@@ -44,33 +47,34 @@ const GlobalTable = () => {
 	};
 
 	const toggleRow = (index: number) => {
-		const newExpandedRows = new Set(expandedRows);
-		if (newExpandedRows.has(index)) {
-			newExpandedRows.delete(index);
-		} else {
-			newExpandedRows.add(index);
-		}
-		setExpandedRows(newExpandedRows);
+		setExpandedRows((prev) => {
+			const newExpandedRows = new Set(prev);
+			newExpandedRows.has(index)
+				? newExpandedRows.delete(index)
+				: newExpandedRows.add(index);
+			return newExpandedRows;
+		});
 	};
 
-	async function fetchEntries() {
+	const fetchEntries = async () => {
 		try {
 			const response = await getEntryAction();
 			if (response.error) {
 				toast.error("Something went Wrong", { theme: "dark" });
+			} else {
+				setRows(response.data);
+				setCurrentUser(response.user);
 			}
-			setRows(response.data);
-			setCurrentUser(response.user);
 		} catch (error) {
 			toast.error("Failed to fetch entries: " + error, { theme: "dark" });
 			console.error("Failed to fetch entries:", error);
 		} finally {
 			setLoading(false);
 		}
-	}
+	};
 
-	async function handleCheckboxChange(data: Row) {
-		const confirmed = confirm("Update the record as paid ?");
+	const handleCheckboxChange = async (data: Row) => {
+		const confirmed = confirm("Update the record as paid?");
 		if (confirmed) {
 			const updateRecord: UpdateEntry = {
 				entryId: data._id,
@@ -80,17 +84,27 @@ const GlobalTable = () => {
 			const updateEntryStatus = await updateEntryAction(updateRecord);
 			if (updateEntryStatus.success) {
 				toast.success("Record updated successfully", { theme: "dark" });
+				await fetchEntries();
 			} else {
 				toast.error("Something went wrong", { theme: "dark" });
 			}
-			await fetchEntries();
+		} else {
+			setCheckboxStates((prev) => ({ ...prev, [data._id]: false }));
 		}
-	}
+	};
 
 	useEffect(() => {
 		setLoading(true);
 		fetchEntries();
 	}, []);
+
+	useEffect(() => {
+		const initialCheckboxStates = rows.reduce((acc, row) => {
+			acc[row._id] = row.status;
+			return acc;
+		}, {} as { [key: string]: boolean });
+		setCheckboxStates(initialCheckboxStates);
+	}, [rows]);
 
 	if (loading) {
 		return <div>Loading...</div>;
@@ -178,8 +192,14 @@ const GlobalTable = () => {
 															<input
 																id={`remember_${index}`}
 																type="checkbox"
-																checked={row.status}
-																onChange={() => handleCheckboxChange(row)}
+																checked={checkboxStates[row._id]}
+																onChange={() => {
+																	setCheckboxStates((prev) => ({
+																		...prev,
+																		[row._id]: !prev[row._id],
+																	}));
+																	handleCheckboxChange(row);
+																}}
 																className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
 																readOnly
 															/>
