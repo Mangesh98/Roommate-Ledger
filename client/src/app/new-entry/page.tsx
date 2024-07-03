@@ -5,6 +5,7 @@ import { createEntryAction } from "../lib/entryActions";
 import { getRoomDetailsAction } from "../lib/roomAction";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+import { useCurrentDate } from "../hooks/useCurrentDate";
 
 // Define interface for form data
 export interface EntryFormData {
@@ -14,21 +15,13 @@ export interface EntryFormData {
 	selectedMembers: string[];
 }
 
-// Function to get today's date in YYYY-MM-DD format
-export function getCurrentDate() {
-	const today = new Date();
-	const year = today.getFullYear();
-	const month = String(today.getMonth() + 1).padStart(2, "0"); // January is 0!
-	const day = String(today.getDate()).padStart(2, "0");
-	return `${year}-${month}-${day}`;
-}
-
 const NewEntry = () => {
 	const router = useRouter();
+	const today = useCurrentDate();
 	const [formData, setFormData] = useState<EntryFormData>({
 		description: "",
 		price: undefined,
-		date: getCurrentDate(),
+		date: today,
 		selectedMembers: [],
 	});
 	const [roomMembers, setRoomMembers] = useState<any[]>([]);
@@ -153,7 +146,7 @@ const NewEntry = () => {
 						name="date"
 						value={formData.date}
 						onChange={handleChange}
-						max={getCurrentDate()}
+						max={today}
 						className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
 						required
 					/>
