@@ -1,5 +1,11 @@
 "use client";
-import { getEntryAction, updateEntryAction } from "@/app/lib/entryActions";
+import {
+	deleteEntryAction,
+	getEntryAction,
+	updateEntryAction,
+} from "@/app/lib/entryActions";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 
@@ -30,6 +36,7 @@ export interface UpdateEntry {
 	amount: number;
 }
 const GlobalTable = () => {
+	const router = useRouter();
 	const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
 	const [rows, setRows] = useState<Row[]>([]);
 	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
@@ -93,6 +100,25 @@ const GlobalTable = () => {
 		}
 	};
 
+	const handleDeleteClick = async (id: string) => {
+		const confirmed = confirm("Are you sure you want to delete this Entry?");
+		if (confirmed) {
+			try {
+				const deleteResult = await deleteEntryAction(id);
+				if (deleteResult.success) {
+					const newRows = rows.filter((row) => row._id !== id);
+					setRows(newRows);
+					toast.success("Entry Deleted successfully!", { theme: "dark" });
+				} else {
+					toast.error("Something went wrong", { theme: "dark" });
+				}
+			} catch (error) {
+				toast.error("Failed to delete entry: " + error, { theme: "dark" });
+				console.error("Failed to delete entry:", error);
+			}
+		}
+	};
+
 	useEffect(() => {
 		setLoading(true);
 		fetchEntries();
@@ -131,6 +157,9 @@ const GlobalTable = () => {
 							</th>
 							<th scope="col" className="px-6 py-3">
 								Status
+							</th>
+							<th scope="col" className="px-6 py-3">
+								Delete
 							</th>
 						</tr>
 					</thead>
@@ -209,6 +238,25 @@ const GlobalTable = () => {
 													return null;
 												}
 											})()}
+										</td>
+										<td className="px-6 py-4">
+											{row.paidBy === currentUser?.id &&
+												row.members.filter(
+													(member) => member.paidStatus === true
+												).length === 1 && (
+													<button
+														className="text-blue-600 hover:underline"
+														onClick={() => handleDeleteClick(row._id)}
+													>
+														{/* Delete */}
+														<Image
+															src={"/deleteEntry.png"}
+															alt={"Delete"}
+															width={30}
+															height={30}
+														/>
+													</button>
+												)}
 										</td>
 									</tr>
 									{expandedRows.has(index) && (

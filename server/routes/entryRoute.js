@@ -2,7 +2,11 @@ const express = require("express");
 const entryModel = require("../models/entry");
 const userModel = require("../models/user");
 const auth = require("../lib/auth");
-const { updateLedger, decreaseReceivable } = require("./ledgerRoute");
+const {
+	updateLedger,
+	decreaseReceivable,
+	updateLedgerOnDelete,
+} = require("./ledgerRoute");
 const router = express.Router();
 
 router.post("/new-entry", auth, async (req, res) => {
@@ -124,9 +128,6 @@ router.post("/update-entry", auth, async (req, res) => {
 		if (!updatedEntry) {
 			throw new Error("Entry or member not found");
 		}
-
-		// console.log("Updated Entry:", updatedEntry);
-
 		// Update Ledger
 		const record = await decreaseReceivable(paidBy, userId, amount);
 		// console.log(record);
@@ -134,6 +135,38 @@ router.post("/update-entry", auth, async (req, res) => {
 		res.status(201).json({ success: true, message: "Updated Successfully" });
 	} catch (error) {
 		console.error("Failed to create new entry:", error);
+		res
+			.status(500)
+			.json({ success: false, message: "Server error", error: error.message });
+	}
+});
+
+router.post("/delete-entry", auth, async (req, res) => {
+	const { entryId } = req.body;
+	const { room } = req.user;
+
+	try {
+		// Find the entry to be deleted
+		const entry = await entryModel.findOne({ _id: entryId, room });
+
+		if (!entry) {
+			return res
+				.status(404)
+				.json({ success: false, message: "Entry not found" });
+		}
+
+		console.log("Deleted Entry: ", entry);
+		// Delete the entry
+		await entry.deleteOne();
+
+		// Update Ledger
+		await updateLedgerOnDelete(entry);
+
+		res
+			.status(200)
+			.json({ success: true, message: "Entry deleted successfully" });
+	} catch (error) {
+		console.error("Failed to delete entry:", error);
 		res
 			.status(500)
 			.json({ success: false, message: "Server error", error: error.message });

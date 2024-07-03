@@ -96,6 +96,55 @@ async function updateLedger(newEntry) {
 		throw error;
 	}
 }
+async function updateLedgerOnDelete(deletedEntry) {
+	try {
+		const { room, paidBy, members, amount } = deletedEntry;
+
+		// Calculate payable and receivable amounts
+		const totalMembers = members.length;
+		const payableAmount = Math.round(amount / totalMembers);
+
+		// Update ledger for each member
+		await Promise.all(
+			members.map(async (member) => {
+				const { userId } = member;
+
+				if (userId.toString() === paidBy.toString()) {
+					// Update receivable amount for the user who paid
+					await Promise.all(
+						members.map(async (member) => {
+							if (member.userId.toString() !== paidBy.toString()) {
+								const updatedLedger = await ledgerModel.findOneAndUpdate(
+									{ room, userId: paidBy, "members.userId": member.userId },
+									{
+										$inc: { "members.$.receivable": -payableAmount },
+									},
+									{ new: true }
+								);
+								// console.log("Updated ledger for receivable:", updatedLedger);
+							}
+						})
+					);
+				} else {
+					// Update payable amount for other members
+					const updatedLedger = await ledgerModel.findOneAndUpdate(
+						{ room, userId, "members.userId": paidBy },
+						{
+							$inc: { "members.$.payable": -payableAmount },
+						},
+						{ new: true }
+					);
+					// console.log("Updated ledger for payable:", updatedLedger);
+				}
+			})
+		);
+
+		// console.log("Ledger updated successfully on delete");
+	} catch (error) {
+		console.error("Failed to update ledger on delete:", error);
+		throw error;
+	}
+}
 
 async function decreaseReceivable(userId, memberId, amount) {
 	try {
@@ -109,7 +158,6 @@ async function decreaseReceivable(userId, memberId, amount) {
 			{ $inc: { "members.$.payable": -amount } },
 			{ new: true }
 		);
-		
 
 		if (!updatedReceivable) {
 			throw new Error("Ledger or member not found");
@@ -122,7 +170,6 @@ async function decreaseReceivable(userId, memberId, amount) {
 		throw error;
 	}
 }
-
 
 router.post("/get-ledger", auth, async (req, res) => {
 	const { room, userId, name } = req.user;
@@ -151,4 +198,9 @@ router.post("/get-ledger", auth, async (req, res) => {
 	}
 });
 
-module.exports = { router, updateLedger,decreaseReceivable };
+module.exports = {
+	router,
+	updateLedger,
+	decreaseReceivable,
+	updateLedgerOnDelete,
+};

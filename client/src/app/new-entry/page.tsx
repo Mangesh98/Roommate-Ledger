@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { createEntryAction } from "../lib/entryActions";
 import { getRoomDetailsAction } from "../lib/roomAction";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 // Define interface for form data
 export interface EntryFormData {
@@ -11,6 +12,15 @@ export interface EntryFormData {
 	price?: number;
 	date: string;
 	selectedMembers: string[];
+}
+
+// Function to get today's date in YYYY-MM-DD format
+export function getCurrentDate() {
+	const today = new Date();
+	const year = today.getFullYear();
+	const month = String(today.getMonth() + 1).padStart(2, "0"); // January is 0!
+	const day = String(today.getDate()).padStart(2, "0");
+	return `${year}-${month}-${day}`;
 }
 
 const NewEntry = () => {
@@ -35,15 +45,6 @@ const NewEntry = () => {
 
 		fetchMembers();
 	}, []);
-
-	// Function to get today's date in YYYY-MM-DD format
-	function getCurrentDate() {
-		const today = new Date();
-		const year = today.getFullYear();
-		const month = String(today.getMonth() + 1).padStart(2, "0"); // January is 0!
-		const day = String(today.getDate()).padStart(2, "0");
-		return `${year}-${month}-${day}`;
-	}
 
 	// Handle input changes
 	const handleChange = (
@@ -81,11 +82,14 @@ const NewEntry = () => {
 			const response = await createEntryAction(formData);
 			if (!response.success) {
 				console.log(response.error);
+				toast.error(response.error, { theme: "dark" });
 			} else {
 				console.log(response.message);
+				toast.success(response.message, { theme: "dark" });
 				router.push("/");
 			}
 		} catch (error) {
+			toast.error("Failed to submit form..!", { theme: "dark" });
 			console.error("Failed to submit form:", error);
 		}
 	};
