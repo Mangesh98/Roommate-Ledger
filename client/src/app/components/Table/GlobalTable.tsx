@@ -5,7 +5,6 @@ import {
 	updateEntryAction,
 } from "@/app/lib/entryActions";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 
@@ -22,6 +21,7 @@ interface CurrentUser {
 export interface Row {
 	_id: string;
 	date: string;
+	createdAt: string;
 	name: string;
 	room: string;
 	description: string;
@@ -36,7 +36,7 @@ export interface UpdateEntry {
 	amount: number;
 }
 const GlobalTable = () => {
-	const router = useRouter();
+	const pageLimit: Number = 10;
 	const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
 	const [rows, setRows] = useState<Row[]>([]);
 	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
@@ -44,6 +44,8 @@ const GlobalTable = () => {
 	const [checkboxStates, setCheckboxStates] = useState<{
 		[key: string]: boolean;
 	}>({});
+	const [currentPage, setCurrentPage] = useState<number>(1);
+	const [totalPages, setTotalPages] = useState<number>(1);
 
 	const formatDate = (isoDate: string) => {
 		const date = new Date(isoDate);
@@ -63,14 +65,21 @@ const GlobalTable = () => {
 		});
 	};
 
-	const fetchEntries = async () => {
+	const fetchEntries = async (page: number) => {
+		setLoading(true);
 		try {
-			const response = await getEntryAction();
+			const response = await getEntryAction(page, pageLimit);
+			// console.log(response.data);
+
 			if (response.error) {
 				toast.error("Something went Wrong", { theme: "dark" });
 			} else {
 				setRows(response.data);
+				console.log(rows);
+
 				setCurrentUser(response.user);
+				setCurrentPage(page);
+				setTotalPages(response.pagination.totalPages);
 			}
 		} catch (error) {
 			toast.error("Failed to fetch entries: " + error, { theme: "dark" });
@@ -79,7 +88,7 @@ const GlobalTable = () => {
 			setLoading(false);
 		}
 	};
-
+	
 	const handleCheckboxChange = async (data: Row) => {
 		const confirmed = confirm("Update the record as paid?");
 		if (confirmed) {
@@ -91,7 +100,7 @@ const GlobalTable = () => {
 			const updateEntryStatus = await updateEntryAction(updateRecord);
 			if (updateEntryStatus.success) {
 				toast.success("Record updated successfully", { theme: "dark" });
-				await fetchEntries();
+				await fetchEntries(currentPage);
 			} else {
 				toast.error("Something went wrong", { theme: "dark" });
 			}
@@ -121,8 +130,15 @@ const GlobalTable = () => {
 
 	useEffect(() => {
 		setLoading(true);
-		fetchEntries();
+		fetchEntries(currentPage);
+		setLoading(false);
 	}, []);
+
+	const handlePaginationClick = (page: number) => {
+		setLoading(true);
+		fetchEntries(page);
+		setLoading(false);
+	};
 
 	useEffect(() => {
 		const initialCheckboxStates = rows.reduce((acc, row) => {
@@ -232,6 +248,10 @@ const GlobalTable = () => {
 																className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
 																readOnly
 															/>
+															<label className="ml-2">
+																Pay &#8377;
+																{Math.round(row.amount / row.members.length)}
+															</label>
 														</div>
 													);
 												} else {
@@ -262,6 +282,18 @@ const GlobalTable = () => {
 									{expandedRows.has(index) && (
 										<tr className="bg-gray-50 dark:bg-gray-700">
 											<td className="px-6 py-4" colSpan={6}>
+												<label
+													className="bg-gray-50  text-gray-900 text-sm  focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+													htmlFor=""
+												>
+													Created At :
+													<span style={{ marginLeft: "8px" }}></span>
+													{`${new Date(row.date)
+														.toLocaleDateString("en-GB")
+														.replace(/\//g, "-")} ${new Date(
+														row.createdAt
+													).toLocaleTimeString()}`}
+												</label>
 												<div>
 													<h3 className="font-semibold text-gray-900 dark:text-white">
 														Members:
@@ -302,6 +334,62 @@ const GlobalTable = () => {
 							))
 						)}
 					</tbody>
+					<tfoot>
+						<tr className="font-semibold text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 ">
+							<th scope="row" className="px-6 py-3 text-base">
+								Total
+							</th>
+							<td className="px-6 py-3"></td>
+							<td className="px-6 py-3"></td>
+							<td className="px-6 py-3">
+								&#8377;{rows.reduce((sum, row) => sum + row.amount, 0)}
+							</td>
+							<td className="px-6 py-3"></td>
+							<td className="px-6 py-3"></td>
+						</tr>
+						{/* Pagination controls */}
+						<div>
+							<ul className="inline-flex -space-x-px text-base h-10">
+								{/* Previous button */}
+								<li>
+									<button
+										disabled={currentPage === 1}
+										onClick={() => handlePaginationClick(currentPage - 1)}
+										className={`flex items-center justify-center px-4 h-10 ms-0 leading-tight text-gray-500 bg-white border border-e-0 border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white focus:outline-none`}
+									>
+										Previous
+									</button>
+								</li>
+
+								{/* Pagination pages */}
+								{Array.from({ length: totalPages }, (_, i) => (
+									<li key={i}>
+										<button
+											onClick={() => handlePaginationClick(i + 1)}
+											className={`flex items-center justify-center px-4 h-10 leading-tight ${
+												currentPage === i + 1
+													? "text-blue-600 border border-blue-300 bg-blue-50"
+													: "text-gray-500 border border-gray-300 bg-white"
+											} hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white focus:outline-none`}
+										>
+											{i + 1}
+										</button>
+									</li>
+								))}
+
+								{/* Next button */}
+								<li>
+									<button
+										disabled={currentPage === totalPages}
+										onClick={() => handlePaginationClick(currentPage + 1)}
+										className={`flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white focus:outline-none`}
+									>
+										Next
+									</button>
+								</li>
+							</ul>
+						</div>
+					</tfoot>
 				</table>
 			</div>
 		</div>

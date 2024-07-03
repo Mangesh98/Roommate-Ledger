@@ -68,9 +68,15 @@ router.post("/new-entry", auth, async (req, res) => {
 
 router.post("/get-all-entry", auth, async (req, res) => {
 	const { room, userId, name } = req.user;
+	const { page = 1, limit = 30 } = req.body;
+	// console.log(req.body);
 	try {
-		// Fetch all entries for the user's room
-		const entries = await entryModel.find({ room });
+		// Fetch entries with sorting and pagination
+		const entries = await entryModel
+			.find({ room })
+			.sort({ date: -1 })
+			.skip((page - 1) * limit)
+			.limit(limit);
 
 		if (!entries) {
 			return res
@@ -78,13 +84,26 @@ router.post("/get-all-entry", auth, async (req, res) => {
 				.json({ success: false, message: "No entries found for this room" });
 		}
 
+		const totalEntries = await entryModel.countDocuments({ room }); // Count total entries for pagination info
+		const totalPages = Math.ceil(totalEntries / limit); // Calculate total pages
+
 		const userData = {
 			roomId: room,
 			name: name,
 			id: userId,
 		};
-		// console.log(userData);
-		res.status(200).json({ success: true, entries: entries, user: userData });
+
+		res.status(200).json({
+			success: true,
+			entries: entries,
+			user: userData,
+			pagination: {
+				page,
+				limit,
+				totalPages,
+				totalEntries,
+			},
+		});
 	} catch (error) {
 		console.error("Failed to fetch entries:", error);
 		res
@@ -92,6 +111,7 @@ router.post("/get-all-entry", auth, async (req, res) => {
 			.json({ success: false, message: "Server error", error: error.message });
 	}
 });
+
 router.post("/get-my-entry", auth, async (req, res) => {
 	const { room, userId, name } = req.user;
 	try {

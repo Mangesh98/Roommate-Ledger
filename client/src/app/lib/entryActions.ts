@@ -32,7 +32,7 @@ export const createEntryAction = async (data: EntryFormData) => {
 	}
 };
 
-export const getEntryAction = async () => {
+export const getEntryAction = async (page: Number, limit: Number) => {
 	try {
 		const url = `${process.env.NEXT_PUBLIC_DB_HOST}/entry/get-all-entry`;
 
@@ -44,19 +44,26 @@ export const getEntryAction = async () => {
 		const response = await fetch(url, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ token: token }),
+			body: JSON.stringify({ token, page, limit }),
 		});
 
 		if (response.ok) {
 			const result = await response.json();
 
-			return { success: true, data: result.entries, user: result.user };
+			return {
+				success: true,
+				data: result.entries,
+				user: result.user,
+				pagination: result.pagination,
+			};
 		} else {
 			return { success: false, error: "Failed to get Entries" };
 		}
 	} catch (error) {
 		console.error("Error during login:", error);
-		return { error: "An unexpected error occurred. Please try again later." }; // Generic error for client
+		return {
+			error: "An unexpected error occurred. Please try again later.",
+		};
 	}
 };
 

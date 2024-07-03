@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { LoginFormValues } from "../(auth)/sign-in/page";
 import { SignUpFormValues } from "../(auth)/sign-up/page";
+import { message } from "antd";
 
 export const loginAction = async (formData: LoginFormValues) => {
 	try {
@@ -54,6 +55,5 @@ export const signUpAction = async (formData: SignUpFormValues) => {
 };
 export const logoutAction = async () => {
 	cookies().set("token", "");
-	console.log("Login successful!");
-	redirect("/sign-in");
+	return { result: true, message: "Logout successful" };
 };

@@ -29,8 +29,8 @@ const Login: React.FC = () => {
 				toast.error(result.error, { theme: "dark" });
 				setError(result.error);
 			} else {
-				toast.success("Login successful!", { theme: "dark" });
 				router.push("/");
+				toast.success("Login successful!", { theme: "dark" });
 			}
 		} catch (error) {
 			console.error("Error during login:", error);

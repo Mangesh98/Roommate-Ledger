@@ -2,10 +2,11 @@
 import Link from "next/link";
 import React from "react";
 import { logoutAction } from "../lib/usersAction";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
 const Navbar = () => {
+	const router = useRouter();
 	const pathname = usePathname();
 
 	// Use conditional rendering to show/hide navbar based on pathname
@@ -14,8 +15,11 @@ const Navbar = () => {
 	async function logout() {
 		const confirmed = confirm("Are you sure you want to logout?");
 		if (confirmed) {
-			toast.success("Logout successful!", { theme: "dark" });
-			await logoutAction();
+			const logoutResult = await logoutAction();
+			if (logoutResult.result) {
+				router.push("/sign-in");
+				toast.success("Logout successful!", { theme: "dark" });
+			}
 		}
 	}
 	return (
