@@ -28,7 +28,7 @@ const Register: React.FC = () => {
 			const result = await signUpAction(values);
 
 			if (result.error) {
-				toast.success(result.error, { theme: "dark" });
+				toast.error(result.error, { theme: "dark" });
 				setError(result.error);
 			} else {
 				toast.success("Registration successful!", { theme: "dark" });
@@ -70,7 +70,7 @@ const Register: React.FC = () => {
 						name="name"
 						rules={[{ required: true, message: "Please input your Name!" }]}
 					>
-						<Input placeholder="Name" />
+						<Input placeholder="First Name" />
 					</Form.Item>
 					<Form.Item
 						name="room"
