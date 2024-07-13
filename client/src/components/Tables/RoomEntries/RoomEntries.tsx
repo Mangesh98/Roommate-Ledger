@@ -66,13 +66,11 @@ const RoomEntries = () => {
 		setLoading(true);
 		try {
 			const response = await getEntryAction(page, pageLimit, token);
-			// console.log(response);
-
 			if (response.error) {
 				toast({
 					variant: "destructive",
 					title: "Failed to fetch entries",
-					description: response.error,
+					description: "Something went wrong",
 				});
 			} else {
 				setRows(response.data);

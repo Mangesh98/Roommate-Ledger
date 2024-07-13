@@ -19,13 +19,9 @@ export const getEntryAction = async (
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ token, page, limit }),
 		});
-		// console.log(response);
-		
+
 		if (response.ok) {
-			
 			const result = await response.json();
-			// console.log(result);
-			
 			return {
 				success: true,
 				data: result.entries,

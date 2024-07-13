@@ -71,7 +71,6 @@ router.post("/register", async (req, res) => {
 // User Login
 router.post("/login", async (req, res) => {
 	const { email, password } = req.body;
-
 	// Validate user input
 	if (!email || !password) {
 		return res
@@ -94,7 +93,18 @@ router.post("/login", async (req, res) => {
 			.status(401)
 			.json({ success: false, message: "Invalid email or password" });
 	}
-
+	// const roomResponse = await roomModel.findOne({ _id: room });
+	// if (!roomResponse) {
+	// 	return res.status(401).json({ success: false, message: "Invalid Room !" });
+	// }
+	// const userData = {
+	// 	userId: user._id,
+	// 	userName: user.name,
+	// 	email: user.email,
+	// 	roomId: user.room,
+	// 	roomName: roomResponse.name,
+	// };
+	// console.log(userData);
 	let token = jwt.sign(
 		{ email: email, userId: user._id, room: user.room, name: user.name },
 		process.env.JWT_SECRET
@@ -104,9 +114,12 @@ router.post("/login", async (req, res) => {
 		sameSite: "None",
 		secure: true,
 	});
-	res
-		.status(200)
-		.json({ success: true, message: "Login successful", token: token });
+	res.status(200).json({
+		success: true,
+		message: "Login successful",
+		token: token,
+	});
+	// userData: userData,
 });
 
 module.exports = router;

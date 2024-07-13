@@ -8,8 +8,8 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 const corsOptions = {
-	origin: [process.env.CLIENT_URL], // Next.js app's URL
-	// origin: [process.env.CLIENT_URL_REACT], // React app's URL
+	origin: [process.env.CLIENT_URL], // Production app's URL
+	// origin: [process.env.CLIENT_URL_DEV], // Development app's URL
 	credentials: true, // Allow cookies for authentication
 	allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
 	methods: "GET, POST", // Allowed HTTP methods
@@ -25,7 +25,7 @@ app.use(bodyParser.json());
 const usersRoutes = require("./routes/usersRoute");
 const roomRoutes = require("./routes/roomRoute");
 const entryRoutes = require("./routes/entryRoute");
-const {router: ledgerRoutes} = require("./routes/ledgerRoute");
+const { router: ledgerRoutes } = require("./routes/ledgerRoute");
 
 // Use routes
 app.use("/users", usersRoutes);
