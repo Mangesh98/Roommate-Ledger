@@ -2,3 +2,4 @@
 .vscode/*
 .vscode/settings.json
 client next_js
+server_with_ts
