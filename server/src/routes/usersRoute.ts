@@ -1,12 +1,14 @@
-const express = require("express");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const userModel = require("../models/user");
-const roomModel = require("../models/room");
+import express, { Request, Response } from "express";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
+import userModel from "../models/user";
+import roomModel, { Room } from "../models/room";
+
 const router = express.Router();
 
 // User Registration
-router.post("/register", async (req, res) => {
+router.post("/register", async (req: Request, res: Response) => {
 	const { name, email, password, room } = req.body;
 
 	// Validate user input
@@ -16,9 +18,9 @@ router.post("/register", async (req, res) => {
 			.json({ success: false, message: "Please provide valid details" });
 	}
 
-	const roomDec = await roomModel.findOne({ name: room });
+	const roomDec: Room | null = await roomModel.findOne({ name: room });
 	if (!roomDec) {
-		return res.status(409).json({ success: false, message: "Invalid Room !" });
+		return res.status(409).json({ success: false, message: "Invalid Room!" });
 	}
 
 	const roomId = roomDec._id;
@@ -35,29 +37,29 @@ router.post("/register", async (req, res) => {
 	const hashedPassword = await bcrypt.hash(password, 10);
 
 	// Store user data
-	const user = await userModel.create({
+	const user = (await userModel.create({
 		name,
 		email,
 		password: hashedPassword,
 		room: roomId,
-	});
+	})) as mongoose.Document & { _id: mongoose.Types.ObjectId };
 
 	// Add the user to the room members
 	roomDec.members.push({
+		_id: new mongoose.Types.ObjectId(),
 		userId: user._id,
 		userName: name,
 		userEmail: email,
 	});
 	await roomDec.save();
 
-	let token = jwt.sign(
+	const token = jwt.sign(
 		{ email: email, userId: user._id, room: roomId, name: name },
-		process.env.JWT_SECRET
+		process.env.JWT_SECRET as string // Assert type
 	);
 
 	res.cookie("token", token, {
 		httpOnly: true,
-		sameSite: "None",
 		secure: true,
 	});
 
@@ -69,8 +71,9 @@ router.post("/register", async (req, res) => {
 });
 
 // User Login
-router.post("/login", async (req, res) => {
+router.post("/login", async (req: Request, res: Response) => {
 	const { email, password } = req.body;
+
 	// Validate user input
 	if (!email || !password) {
 		return res
@@ -93,25 +96,14 @@ router.post("/login", async (req, res) => {
 			.status(401)
 			.json({ success: false, message: "Invalid email or password" });
 	}
-	// const roomResponse = await roomModel.findOne({ _id: room });
-	// if (!roomResponse) {
-	// 	return res.status(401).json({ success: false, message: "Invalid Room !" });
-	// }
-	// const userData = {
-	// 	userId: user._id,
-	// 	userName: user.name,
-	// 	email: user.email,
-	// 	roomId: user.room,
-	// 	roomName: roomResponse.name,
-	// };
-	// console.log(userData);
-	let token = jwt.sign(
+
+	const token = jwt.sign(
 		{ email: email, userId: user._id, room: user.room, name: user.name },
-		process.env.JWT_SECRET
+		process.env.JWT_SECRET as string // Assert type
 	);
+
 	res.cookie("token", token, {
 		httpOnly: true,
-		sameSite: "None",
 		secure: true,
 	});
 	res.status(200).json({
@@ -119,7 +111,6 @@ router.post("/login", async (req, res) => {
 		message: "Login successful",
 		token: token,
 	});
-	// userData: userData,
 });
 
-module.exports = router;
+export default router;
