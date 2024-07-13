@@ -17,18 +17,11 @@ import { Loader2 } from "lucide-react";
 import { useToast } from "../ui/use-toast";
 import { useCookies } from "react-cookie";
 import { SignInSchema } from "../../schemas/signInSchema";
-// import { useDispatch } from "react-redux";
-// import { AppDispatch } from "../../store/store";
-// import { setCurrentUser } from "../../store/userSlice";
-// import { CurrentUser } from "../../types/types";
 
 const SignIn = () => {
 	const { toast } = useToast();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [, setCookie] = useCookies(["token"]);
-
-	// const dispatch = useDispatch<AppDispatch>();
-	
 
 	const form = useForm<z.infer<typeof SignInSchema>>({
 		resolver: zodResolver(SignInSchema),
@@ -72,9 +65,9 @@ const SignIn = () => {
 	};
 	return (
 		<>
-			<section className="bg-gray-50 dark:bg-gray-900">
+			<section className="">
 				<div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
-					<div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-lg xl:p-0 dark:bg-gray-800 dark:border-gray-700">
+					<div className="w-full rounded-lg shadow md:border md:mt-0 sm:max-w-lg xl:p-0 ">
 						<div className="p-6 space-y-4 md:space-y-6 sm:p-8">
 							<h1 className="text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
 								Welcome back to Roommate Ledger
@@ -95,7 +88,6 @@ const SignIn = () => {
 											<FormLabel>Email</FormLabel>
 											<FormControl>
 												<Input
-													className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
 													type="email"
 													placeholder="email123@email.com"
 													{...field}
@@ -113,7 +105,6 @@ const SignIn = () => {
 											<FormLabel>Password</FormLabel>
 											<FormControl>
 												<Input
-													className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
 													placeholder="Password"
 													type="password"
 													{...field}

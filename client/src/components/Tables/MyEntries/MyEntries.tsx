@@ -5,7 +5,6 @@ import { EntryType } from "../../../types/types";
 
 import { formatDate } from "../../../lib/utils";
 
-
 import {
 	Pagination,
 	PaginationContent,
@@ -25,7 +24,8 @@ import {
 	DialogTrigger,
 } from "../../ui/dialog";
 
-import { Circle, CircleCheck,  Info } from "lucide-react";
+import { Circle, CircleCheck, Info } from "lucide-react";
+import { Skeleton } from "../../ui/skeleton";
 
 const MyEntries = () => {
 	const pageLimit = 10;
@@ -53,20 +53,69 @@ const MyEntries = () => {
 		}
 	};
 	useEffect(() => {
-		setLoading(true);
 		fetchData(currentPage);
-		setLoading(false);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [currentPage, token]);
 
 	const handlePaginationClick = (page: number) => {
-		setLoading(true);
 		fetchData(page);
-		setLoading(false);
 	};
 
 	if (loading) {
-		return <div>Loading...</div>;
+		return (
+			<>
+				<div className="relative w-full overflow-auto">
+					<h2 className="mb-2">My Entries</h2>
+					<div className="overflow-x-auto">
+						<table className="w-full table-auto min-w-max">
+							<thead className="text-sm font-medium text-gray-900 dark:text-white bg-gray-200 dark:bg-gray-800">
+								<tr className="border-b">
+									{["Date", "मकसद", "Amount", "Info"].map((_header, index) => (
+										<th key={index} scope="col" className="px-6 py-3 text-left">
+											<Skeleton className="h-4 w-full" />
+										</th>
+									))}
+								</tr>
+							</thead>
+
+							<tbody className="text-sm text-gray-900 dark:text-white divide-y divide-gray-200 dark:divide-gray-700">
+								{Array.from({ length: 5 }).map((_, rowIndex) => (
+									<tr
+										key={rowIndex}
+										className="border-b transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+									>
+										{Array.from({ length: 4 }).map((_, colIndex) => (
+											<td key={colIndex} className="px-6 py-4">
+												<Skeleton className="h-4 w-full" />
+											</td>
+										))}
+									</tr>
+								))}
+							</tbody>
+
+							<tfoot className="bg-gray-200 dark:bg-gray-800">
+								<tr>
+									<th scope="row" className="px-6 py-3 text-base text-left">
+										<Skeleton className="h-4 w-full" />
+									</th>
+									{Array.from({ length: 3 }).map((_, colIndex) => (
+										<td key={colIndex} className="px-6 py-3">
+											<Skeleton className="h-4 w-full" />
+										</td>
+									))}
+								</tr>
+							</tfoot>
+						</table>
+					</div>
+					{/* Pagination controls */}
+					<div className="pagination mt-2 flex space-x-2">
+						{Array.from({ length: 5 }).map((_, index) => (
+							<Skeleton key={index} className="h-8 w-8" />
+						))}
+					</div>
+				</div>
+			</>
+		);
 	}
 
 	return (
@@ -110,7 +159,6 @@ const MyEntries = () => {
 										</td>
 										<td className="px-6 py-4">{row.description}</td>
 										<td className="px-6 py-4">&#8377;{row.amount}</td>
-										
 
 										<td className="px-6 py-4">
 											<Dialog aria-labelledby="dialog-title">

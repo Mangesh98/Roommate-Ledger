@@ -4,18 +4,19 @@ import { getLedger } from "../../../api/entry";
 import { LedgerType } from "../../../types/types";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store/store";
+import { Skeleton } from "../../ui/skeleton";
 
 const Ledger = () => {
 	const [ledgers, setLedgers] = useState<LedgerType[]>([]);
-	const [loading, setLoading] = useState<boolean>(true);
+	const [loading, setLoading] = useState<boolean>(false);
 	const [cookies] = useCookies();
 	const token = cookies.token;
 	const currentUser = useSelector((state: RootState) => state.currentUser);
 
 	async function fetchLedgerEntries() {
+		setLoading(true);
 		try {
 			const response = await getLedger(token);
-			// console.log(response);
 
 			const filteredLedgers = response.data.map((ledger: LedgerType) => ({
 				...ledger,
@@ -27,15 +28,63 @@ const Ledger = () => {
 			setLedgers(filteredLedgers);
 		} catch (error) {
 			console.error("Failed to fetch entries:", error);
+		} finally {
+			setLoading(false);
 		}
 	}
 	useEffect(() => {
 		fetchLedgerEntries();
-		setLoading(false);
 	}, []);
-
+	
 	if (loading) {
-		return <div>Loading...</div>;
+		return (
+			<div className="relative w-full overflow-auto">
+				<h2 className="mb-2">Ledger</h2>
+				<div className="overflow-x-auto">
+					<table className="w-full table-auto min-w-max">
+						<thead className="text-sm font-medium text-gray-900 dark:text-white bg-gray-200 dark:bg-gray-800">
+							<tr className="border-b">
+								{["Name", "Payable", "Receivable", "Total"].map(
+									(_header, index) => (
+										<th key={index} scope="col" className="px-6 py-3 text-left">
+											<Skeleton className="h-4 w-full" />
+										</th>
+									)
+								)}
+							</tr>
+						</thead>
+
+						<tbody className="text-sm text-gray-900 dark:text-white divide-y divide-gray-200 dark:divide-gray-700">
+							{Array.from({ length: 5 }).map((_, rowIndex) => (
+								<tr
+									key={rowIndex}
+									className="border-b transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+								>
+									{Array.from({ length: 4 }).map((_, colIndex) => (
+										<td key={colIndex} className="px-6 py-4">
+											<Skeleton className="h-4 w-full" />
+										</td>
+									))}
+								</tr>
+							))}
+						</tbody>
+
+						<tfoot className="bg-gray-200 dark:bg-gray-800">
+							<tr>
+								<th scope="row" className="px-6 py-3 text-base text-left">
+									<Skeleton className="h-4 w-full" />
+								</th>
+								{Array.from({ length: 3 }).map((_, colIndex) => (
+									<td key={colIndex} className="px-6 py-3">
+										<Skeleton className="h-4 w-full" />
+									</td>
+								))}
+							</tr>
+						</tfoot>
+					</table>
+				</div>
+			</div>
+		);
 	}
 	return (
 		<div>

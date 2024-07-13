@@ -45,15 +45,13 @@ import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../store/store";
 import { setCurrentUser } from "../../../store/userSlice";
+import { Skeleton } from "../../ui/skeleton";
 
 const RoomEntries = () => {
 	const pageLimit: number = 10;
 	const [rows, setRows] = useState<EntryType[]>([]);
-	// const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
-	const [, setCheckboxStates] = useState<{
-		[key: string]: boolean;
-	}>({});
+	const [, setCheckboxStates] = useState<{ [key: string]: boolean }>({});
 	const [, setOpen] = useState(false);
 	const [currentPage, setCurrentPage] = useState<number>(1);
 	const [totalPages, setTotalPages] = useState<number>(1);
@@ -68,19 +66,15 @@ const RoomEntries = () => {
 		setLoading(true);
 		try {
 			const response = await getEntryAction(page, pageLimit, token);
-			// console.log(response.data);
-
 			if (response.error) {
 				toast({
 					variant: "destructive",
-					title: "Failed to delete entry",
+					title: "Failed to fetch entries",
 					description: "Something went wrong",
 				});
 			} else {
 				setRows(response.data);
-				// console.log(rows);
 				const userData: CurrentUser = response.user;
-
 				dispatch(setCurrentUser(userData));
 				setCurrentPage(page);
 				setTotalPages(response.pagination.totalPages);
@@ -91,7 +85,6 @@ const RoomEntries = () => {
 				title: "Failed to fetch entries",
 				description: error as string,
 			});
-			console.error("Failed to fetch entries:", error);
 		} finally {
 			setLoading(false);
 		}
@@ -145,21 +138,12 @@ const RoomEntries = () => {
 				description: "Something went wrong",
 				variant: "destructive",
 			});
-			console.error("Failed to delete entry:", error);
 		}
 	};
 
 	useEffect(() => {
-		setLoading(true);
 		fetchEntries(currentPage);
-		setLoading(false);
 	}, []);
-
-	const handlePaginationClick = (page: number) => {
-		setLoading(true);
-		fetchEntries(page);
-		setLoading(false);
-	};
 
 	useEffect(() => {
 		const initialCheckboxStates = rows.reduce((acc, row) => {
@@ -169,8 +153,77 @@ const RoomEntries = () => {
 		setCheckboxStates(initialCheckboxStates);
 	}, [rows]);
 
+	const handlePaginationClick = (page: number) => {
+		fetchEntries(page);
+	};
+
 	if (loading) {
-		return <div>Loading...</div>;
+		return (
+			<>
+				<div className="relative w-full overflow-auto">
+					<div className="inline-block mb-4">
+						<Skeleton className="h-8 w-1/4 mb-2" />
+						<Skeleton className="h-8 w-1/5" />
+					</div>
+					<Skeleton className="h-6 w-1/3 mb-4" />
+					<div className="overflow-x-auto">
+						<table className="w-full table-auto min-w-max">
+							<thead className="text-sm font-medium text-gray-900 dark:text-white bg-gray-200 dark:bg-gray-800">
+								<tr className="border-b">
+									{[
+										"Date",
+										"Name",
+										"मकसद",
+										"Amount",
+										"Status",
+										"Delete",
+										"Info",
+									].map((_header, index) => (
+										<th key={index} scope="col" className="px-6 py-3 text-left">
+											<Skeleton className="h-4 w-full" />
+										</th>
+									))}
+								</tr>
+							</thead>
+
+							<tbody className="text-sm text-gray-900 dark:text-white divide-y divide-gray-200 dark:divide-gray-700">
+								{Array.from({ length: 5 }).map((_, rowIndex) => (
+									<tr
+										key={rowIndex}
+										className="border-b transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+									>
+										{Array.from({ length: 7 }).map((_, colIndex) => (
+											<td key={colIndex} className="px-6 py-4">
+												<Skeleton className="h-4 w-full" />
+											</td>
+										))}
+									</tr>
+								))}
+							</tbody>
+
+							<tfoot className="bg-gray-200 dark:bg-gray-800">
+								<tr>
+									<th scope="row" className="px-6 py-3 text-base text-left">
+										<Skeleton className="h-4 w-full" />
+									</th>
+									{Array.from({ length: 6 }).map((_, colIndex) => (
+										<td key={colIndex} className="px-6 py-3">
+											<Skeleton className="h-4 w-full" />
+										</td>
+									))}
+								</tr>
+							</tfoot>
+						</table>
+					</div>
+					{/* Pagination controls */}
+					<div className="pagination mt-2 flex space-x-2">
+						{Array.from({ length: 5 }).map((_, index) => (
+							<Skeleton key={index} className="h-8 w-8" />
+						))}
+					</div>
+				</div>
+			</>
+		);
 	}
 
 	return (
