@@ -12,7 +12,8 @@
 		"start": "node dist/app.js",
 		"build": "npm run build:clean && npm run build:copy",
 		"build:clean": "rimraf dist",
-		"build:copy": "tsc"
+		"build:copy": "tsc",
+		"vercel-build":"echo hello"
 	},
 	"keywords": [],
 	"author": "",
