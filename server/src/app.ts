@@ -9,8 +9,8 @@ const app = express();
 const port: number = Number(process.env.PORT) || 5000;
 
 const corsOptions: cors.CorsOptions = {
-	// origin: [process.env.CLIENT_URL || "http://localhost:3000"], // Production app's URL
-	origin: [process.env.CLIENT_URL_DEV || "http://localhost:3000"], // Development app's URL
+	origin: [process.env.CLIENT_URL || "http://localhost:3000"], // Production app's URL
+	// origin: [process.env.CLIENT_URL_DEV || "http://localhost:3000"], // Development app's URL
 	credentials: true, // Allow cookies for authentication
 	allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
 	methods: "GET, POST", // Allowed HTTP methods
