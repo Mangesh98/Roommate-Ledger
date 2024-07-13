@@ -1,6 +1,7 @@
 const express = require("express");
 const entryModel = require("../models/entry");
 const userModel = require("../models/user");
+const roomModel = require("../models/room");
 const auth = require("../lib/auth");
 const {
 	updateLedger,
@@ -67,8 +68,8 @@ router.post("/new-entry", auth, async (req, res) => {
 });
 
 router.post("/get-all-entry", auth, async (req, res) => {
-	const { room, userId, name } = req.user;
-	const { page = 1, limit = 30 } = req.body;
+	const { room, userId, name, email } = req.user;
+	const { page = 1, limit = 10 } = req.body;
 	// console.log(req.body);
 	try {
 		// Fetch entries with sorting and pagination
@@ -87,10 +88,19 @@ router.post("/get-all-entry", auth, async (req, res) => {
 		const totalEntries = await entryModel.countDocuments({ room }); // Count total entries for pagination info
 		const totalPages = Math.ceil(totalEntries / limit); // Calculate total pages
 
+		const roomResponse = await roomModel.findOne({ _id: room });
+		if (!roomResponse) {
+			return res
+				.status(401)
+				.json({ success: false, message: "Invalid Room !" });
+		}
+
 		const userData = {
+			userId: userId,
+			userName: name,
+			email: email,
 			roomId: room,
-			name: name,
-			id: userId,
+			roomName: roomResponse.name,
 		};
 
 		res.status(200).json({
@@ -114,18 +124,42 @@ router.post("/get-all-entry", auth, async (req, res) => {
 
 router.post("/get-my-entry", auth, async (req, res) => {
 	const { room, userId, name } = req.user;
-	try {
-		// Fetch all entries for the user's room
-		const entries = await entryModel.find({ room, paidBy: userId });
+	let { page = 1, limit = 10 } = req.body;
 
-		if (!entries) {
+	// Ensure page and limit are valid numbers
+	page = Math.max(page, 1);
+	limit = Math.max(limit, 1);
+
+	try {
+		// Fetch entries with sorting and pagination
+		const entries = await entryModel
+			.find({ room, paidBy: userId })
+			.sort({ date: -1 })
+			.skip((page - 1) * limit)
+			.limit(limit);
+
+		if (!entries.length) {
 			return res
 				.status(404)
 				.json({ success: false, message: "No entries found for this room" });
 		}
 
-		// console.log(entries);
-		res.status(200).json({ success: true, entries: entries });
+		const totalEntries = await entryModel.countDocuments({
+			room,
+			paidBy: userId,
+		}); // Count total entries for pagination info
+		const totalPages = Math.ceil(totalEntries / limit); // Calculate total pages
+
+		res.status(200).json({
+			success: true,
+			entries: entries,
+			pagination: {
+				page,
+				limit,
+				totalPages,
+				totalEntries,
+			},
+		});
 	} catch (error) {
 		console.error("Failed to fetch entries:", error);
 		res
@@ -175,8 +209,6 @@ router.post("/delete-entry", auth, async (req, res) => {
 				.json({ success: false, message: "Entry not found" });
 		}
 
-		console.log("Deleted Entry: ", entry);
-		// Delete the entry
 		await entry.deleteOne();
 
 		// Update Ledger
