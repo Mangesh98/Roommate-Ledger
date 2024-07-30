@@ -158,28 +158,3 @@ export const createEntryAction = async (data: EntryFormData, token: string) => {
 	}
 };
 
-export const getLedger = async (token: string) => {
-	try {
-		const url = `${import.meta.env.VITE_HOST_URL}/ledger/get-ledger`;
-
-		if (!token) {
-			return { success: false, error: "Unauthorized Access !" };
-		}
-
-		const response = await fetch(url, {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ token }),
-		});
-
-		if (response.ok) {
-			const result = await response.json();
-			return { success: true, data: result.ledger };
-		} else {
-			return { success: false, error: "Failed to get Ledger" };
-		}
-	} catch (error) {
-		console.error("Error during fetching ledger:", error);
-		return { error: "An unexpected error occurred. Please try again later." };
-	}
-};

@@ -1,5 +1,7 @@
 const express = require("express");
 const ledgerModel = require("../models/ledger");
+const entryModel = require("../models/entry");
+
 const auth = require("../lib/auth");
 const router = express.Router();
 
@@ -192,6 +194,73 @@ router.post("/get-ledger", auth, async (req, res) => {
 		res.status(200).json({ success: true, ledger: ledger, user: userData });
 	} catch (error) {
 		console.error("Failed to fetch ledger:", error);
+		res
+			.status(500)
+			.json({ success: false, message: "Server error", error: error.message });
+	}
+});
+
+router.post("/get-associated-entries", auth, async (req, res) => {
+	const { room, userId } = req.user;
+	const { memberId } = req.body;
+	const { page = 1, limit = 10 } = req.body;
+	// console.log("room: " + room + " paidBy:" + userId + " memberId:" + memberId);
+	try {
+		const entries = await entryModel
+			.find({
+				room,
+				$or: [
+					{
+						paidBy: memberId,
+						members: {
+							$elemMatch: {
+								userId: userId,
+								paidStatus: false,
+							},
+						},
+					},
+					{
+						paidBy: userId,
+						members: {
+							$elemMatch: {
+								userId: memberId,
+								paidStatus: false,
+							},
+						},
+					},
+				],
+			})
+			.sort({ date: -1 })
+			.skip((page - 1) * limit)
+			.limit(limit);
+
+
+		// console.log(entries);
+		if (!entries) {
+			return res
+				.status(404)
+				.json({ success: false, message: "No associated entries found !" });
+		}
+
+		const totalEntries = entries.length;
+		const totalPages = Math.ceil(totalEntries / limit); // Calculate total pages
+		if(entries.length === 0){
+			return res
+			.status(200)
+			.json({ success: false, message: "No associated entries found !" });
+		}
+		res.status(200).json({
+			success: true,
+			entries: entries,
+			pagination: {
+				page,
+				limit,
+				totalPages,
+				totalEntries,
+			},
+		});
+	} catch (error) {
+		console.error("Failed to fetch associated entries:", error);
 		res
 			.status(500)
 			.json({ success: false, message: "Server error", error: error.message });

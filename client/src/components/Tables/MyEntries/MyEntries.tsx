@@ -121,7 +121,7 @@ const MyEntries = () => {
 	return (
 		<>
 			<div className="relative w-full overflow-auto">
-				<h2 className="mb-2">Global Table</h2>
+				<h2 className="mb-2">My Entries</h2>
 				<div className="overflow-x-auto">
 					<table className="w-full table-auto min-w-max">
 						<thead className="text-sm font-medium text-gray-900 dark:text-white bg-gray-200 dark:bg-gray-800">
