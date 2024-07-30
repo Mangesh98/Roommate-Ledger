@@ -9,7 +9,7 @@ import { useToast } from "../ui/use-toast";
 import { createEntryAction } from "../../api/entry";
 import { Button } from "../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Calendar } from "../ui/calendar";
 import { addDays, format } from "date-fns";
@@ -22,6 +22,7 @@ const NewEntry = () => {
 	const { toast } = useToast();
 	const [roomMembers, setRoomMembers] = useState<RoomMembers[]>([]);
 	const [date, setDate] = useState<Date>();
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const {
 		register,
@@ -47,6 +48,7 @@ const NewEntry = () => {
 	}, [token]);
 
 	const onSubmit = async (data: EntryFormData) => {
+		setIsSubmitting(true);
 		try {
 			const updatedDate = date ? addDays(date, 0).toISOString() : "";
 			const response = await createEntryAction(
@@ -74,6 +76,8 @@ const NewEntry = () => {
 				variant: "destructive",
 			});
 			console.error("Failed to submit form:", error);
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
@@ -207,7 +211,15 @@ const NewEntry = () => {
 						</p>
 					)}
 				</div>
-				<Button type="submit">Submit</Button>
+				<Button type="submit" disabled={isSubmitting}>
+					{isSubmitting ? (
+						<>
+							<Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait
+						</>
+					) : (
+						"Sign In"
+					)}
+				</Button>
 			</form>
 		</div>
 	);
