@@ -75,7 +75,7 @@ router.post("/get-all-entry", auth, async (req, res) => {
 		// Fetch entries with sorting and pagination
 		const entries = await entryModel
 			.find({ room })
-			.sort({ date: -1 })
+			.sort({ date: -1, createdAt: -1 })
 			.skip((page - 1) * limit)
 			.limit(limit);
 

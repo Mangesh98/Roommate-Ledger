@@ -217,7 +217,7 @@ const NewEntry = () => {
 							<Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait
 						</>
 					) : (
-						"Sign In"
+						"Submit"
 					)}
 				</Button>
 			</form>
