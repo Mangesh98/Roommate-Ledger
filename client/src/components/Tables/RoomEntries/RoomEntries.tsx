@@ -1,5 +1,5 @@
 import { useCookies } from "react-cookie";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
 	deleteEntryAction,
 	getEntryAction,
@@ -7,7 +7,14 @@ import {
 } from "../../../api/entry";
 import { CurrentUser, EntryType, UpdateEntry } from "../../../types/types";
 import { useToast } from "../../ui/use-toast";
-import { Circle, CircleCheck, HandCoins, Info, Trash2 } from "lucide-react";
+import {
+	ChevronDown,
+	Circle,
+	CircleCheck,
+	HandCoins,
+	Info,
+	Trash2,
+} from "lucide-react";
 
 import {
 	AlertDialog,
@@ -38,6 +45,15 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "../../ui/dialog";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuLabel,
+	DropdownMenuRadioGroup,
+	DropdownMenuRadioItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "../../ui/dropdown-menu";
 
 import { Button } from "../../ui/button";
 import { formatDate } from "../../../lib/utils";
@@ -48,24 +64,27 @@ import { setCurrentUser } from "../../../store/userSlice";
 import { Skeleton } from "../../ui/skeleton";
 
 const RoomEntries = () => {
-	const pageLimit: number = 10;
+	// const pageLimit: number = 10;
 	const [rows, setRows] = useState<EntryType[]>([]);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [, setCheckboxStates] = useState<{ [key: string]: boolean }>({});
 	const [, setOpen] = useState(false);
 	const [currentPage, setCurrentPage] = useState<number>(1);
 	const [totalPages, setTotalPages] = useState<number>(1);
+	const [totalEntries, setTotalEntries] = useState<number>(1);
 	const [cookies] = useCookies();
 	const token = cookies.token;
 	const { toast } = useToast();
-
+	const [pageLimit, setPageLimit] = useState<string>("10");
 	const dispatch = useDispatch<AppDispatch>();
 	const currentUser = useSelector((state: RootState) => state.currentUser);
 
 	const fetchEntries = async (page: number) => {
 		setLoading(true);
 		try {
-			const response = await getEntryAction(page, pageLimit, token);
+			const response = await getEntryAction(page, parseInt(pageLimit), token);
+			// console.log(response.pagination);
+
 			if (response.error) {
 				toast({
 					variant: "destructive",
@@ -78,6 +97,7 @@ const RoomEntries = () => {
 				dispatch(setCurrentUser(userData));
 				setCurrentPage(page);
 				setTotalPages(response.pagination.totalPages);
+				setTotalEntries(response.pagination.totalEntries);
 			}
 		} catch (error) {
 			toast({
@@ -144,6 +164,28 @@ const RoomEntries = () => {
 	useEffect(() => {
 		fetchEntries(currentPage);
 	}, []);
+
+	useEffect(() => {
+		// console.log("Page size changed", pageLimit);
+		fetchEntries(currentPage);
+	}, [pageLimit]);
+
+	const generateOptions = useMemo((): string[] => {
+		const standardOptions = [10, 25, 50, 100];
+		const options: number[] = standardOptions.filter(
+			(option) => option <= totalEntries
+		);
+
+		// Add totalEntries as an option if it's not already included
+		if (!options.includes(totalEntries) && totalEntries > 0) {
+			options.push(totalEntries);
+		}
+
+		// Sort options and convert to strings
+		return options.sort((a, b) => a - b).map(String);
+	}, [totalEntries]);
+	// const options = generateOptions();
+	// console.log(options);
 
 	useEffect(() => {
 		const initialCheckboxStates = rows.reduce((acc, row) => {
@@ -244,6 +286,31 @@ const RoomEntries = () => {
 					Room Entries
 				</h2>
 				<div className="overflow-x-auto">
+					{/* Set Entries size */}
+					<div className="pagesize my-2">
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button variant="outline">
+									{pageLimit} <ChevronDown className="ml-2" />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent className="w-full">
+								<DropdownMenuLabel>Entries per page</DropdownMenuLabel>
+								<DropdownMenuSeparator />
+								<DropdownMenuRadioGroup
+									value={pageLimit}
+									onValueChange={setPageLimit}
+								>
+									{generateOptions.map((option) => (
+										<DropdownMenuRadioItem key={option} value={option}>
+											{option}
+										</DropdownMenuRadioItem>
+									))}
+								</DropdownMenuRadioGroup>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</div>
+					{/* Get Entries */}
 					<table className="w-full table-auto min-w-max">
 						<thead className="text-sm font-medium text-gray-900 dark:text-white bg-gray-200 dark:bg-gray-800">
 							<tr className="border-b">
