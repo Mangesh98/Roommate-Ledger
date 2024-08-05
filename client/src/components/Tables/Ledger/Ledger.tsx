@@ -79,7 +79,7 @@ const Ledger = () => {
 				token,
 				memberId
 			);
-			console.log("Ledger Associated ", result, show);
+			// console.log("Ledger Associated ", result, show);
 			if (result.data) {
 				const member = result.data[0].members.find(
 					(member: Member) => member.userId === memberId
