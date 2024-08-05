@@ -8,6 +8,7 @@ import {
 import { CurrentUser, EntryType, UpdateEntry } from "../../../types/types";
 import { useToast } from "../../ui/use-toast";
 import {
+	CalendarIcon,
 	ChevronDown,
 	Circle,
 	CircleCheck,
@@ -56,15 +57,18 @@ import {
 } from "../../ui/dropdown-menu";
 
 import { Button } from "../../ui/button";
-import { formatDate } from "../../../lib/utils";
+import { cn, formatDate } from "../../../lib/utils";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../store/store";
 import { setCurrentUser } from "../../../store/userSlice";
 import { Skeleton } from "../../ui/skeleton";
+import { DateRange } from "react-day-picker";
+import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover";
+import { format } from "date-fns";
+import { Calendar } from "../../ui/calendar";
 
 const RoomEntries = () => {
-	// const pageLimit: number = 10;
 	const [rows, setRows] = useState<EntryType[]>([]);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [, setCheckboxStates] = useState<{ [key: string]: boolean }>({});
@@ -78,12 +82,24 @@ const RoomEntries = () => {
 	const [pageLimit, setPageLimit] = useState<string>("10");
 	const dispatch = useDispatch<AppDispatch>();
 	const currentUser = useSelector((state: RootState) => state.currentUser);
+	const [date, setDate] = useState<DateRange | undefined>(undefined);
 
-	const fetchEntries = async (page: number) => {
+	const fetchEntries = async (page: number, filter?: boolean) => {
 		setLoading(true);
 		try {
-			const response = await getEntryAction(page, parseInt(pageLimit), token);
-			// console.log(response.pagination);
+			let response;
+			if (filter) {
+				setDate(undefined);
+				response = await getEntryAction(page, parseInt(pageLimit), token);
+			} else {
+				response = await getEntryAction(
+					page,
+					parseInt(pageLimit),
+					token,
+					date?.from,
+					date?.to
+				);
+			}
 
 			if (response.error) {
 				toast({
@@ -95,9 +111,9 @@ const RoomEntries = () => {
 				setRows(response.data);
 				const userData: CurrentUser = response.user;
 				dispatch(setCurrentUser(userData));
-				setCurrentPage(page);
 				setTotalPages(response.pagination.totalPages);
 				setTotalEntries(response.pagination.totalEntries);
+				setCurrentPage(page);
 			}
 		} catch (error) {
 			toast({
@@ -109,7 +125,6 @@ const RoomEntries = () => {
 			setLoading(false);
 		}
 	};
-
 	const handleUpdateEntry = async (data: EntryType) => {
 		const updateRecord: UpdateEntry = {
 			entryId: data._id,
@@ -166,7 +181,6 @@ const RoomEntries = () => {
 	}, []);
 
 	useEffect(() => {
-		// console.log("Page size changed", pageLimit);
 		fetchEntries(currentPage);
 	}, [pageLimit]);
 
@@ -184,8 +198,6 @@ const RoomEntries = () => {
 		// Sort options and convert to strings
 		return options.sort((a, b) => a - b).map(String);
 	}, [totalEntries]);
-	// const options = generateOptions();
-	// console.log(options);
 
 	useEffect(() => {
 		const initialCheckboxStates = rows.reduce((acc, row) => {
@@ -268,6 +280,368 @@ const RoomEntries = () => {
 		);
 	}
 
+	// return (
+	// 	<>
+	// 		<div className="relative w-full overflow-auto">
+	// 			<div className="inline-block mb-4">
+	// 				<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+	// 					Room Name: {currentUser?.roomName}
+	// 				</h1>
+	// 				<Link
+	// 					to="/new-entry"
+	// 					className="inline-block mt-2 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-lg px-5 py-2.5 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700"
+	// 				>
+	// 					Create New Entry
+	// 				</Link>
+	// 			</div>
+	// 			<h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+	// 				Room Entries
+	// 			</h2>
+	// 			<div className="overflow-x-auto">
+	// 				{/* Set Entries size */}
+	// 				<div className="pagesize my-2">
+	// 					<DropdownMenu>
+	// 						<DropdownMenuTrigger asChild>
+	// 							<Button variant="outline">
+	// 								{pageLimit} <ChevronDown className="ml-2" />
+	// 							</Button>
+	// 						</DropdownMenuTrigger>
+	// 						<DropdownMenuContent className="w-full">
+	// 							<DropdownMenuLabel>Entries per page</DropdownMenuLabel>
+	// 							<DropdownMenuSeparator />
+	// 							<DropdownMenuRadioGroup
+	// 								value={pageLimit}
+	// 								onValueChange={setPageLimit}
+	// 							>
+	// 								{generateOptions.map((option) => (
+	// 									<DropdownMenuRadioItem key={option} value={option}>
+	// 										{option}
+	// 									</DropdownMenuRadioItem>
+	// 								))}
+	// 							</DropdownMenuRadioGroup>
+	// 						</DropdownMenuContent>
+	// 					</DropdownMenu>
+	// 				</div>
+	// 				{/* date range picker */}
+	// 				<div className="datePicker">
+	// 					<Popover>
+	// 						<PopoverTrigger asChild>
+	// 							<Button
+	// 								id="date"
+	// 								variant={"outline"}
+	// 								className={cn(
+	// 									"w-[300px] justify-start text-left font-normal",
+	// 									!date && "text-muted-foreground"
+	// 								)}
+	// 							>
+	// 								<CalendarIcon className="mr-2 h-4 w-4" />
+	// 								{date?.from ? (
+	// 									date.to ? (
+	// 										<>
+	// 											{format(date.from, "LLL dd, y")} -{" "}
+	// 											{format(date.to, "LLL dd, y")}
+	// 										</>
+	// 									) : (
+	// 										format(date.from, "LLL dd, y")
+	// 									)
+	// 								) : (
+	// 									<span>Pick a date range</span>
+	// 								)}
+	// 							</Button>
+	// 						</PopoverTrigger>
+	// 						<PopoverContent className="w-auto p-0" align="start">
+	// 							<Calendar
+	// 								initialFocus
+	// 								mode="range"
+	// 								defaultMonth={date?.from}
+	// 								selected={date}
+	// 								onSelect={setDate}
+	// 								numberOfMonths={2}
+	// 							/>
+	// 						</PopoverContent>
+	// 					</Popover>
+	// 					{/* Get Entries */}
+	// 				<div/>
+	// 				<div className="flex space-x-4 mb-4">
+	// 					<table className="w-full table-auto min-w-max">
+	// 						<thead className="text-sm font-medium text-gray-900 dark:text-white bg-gray-200 dark:bg-gray-800">
+	// 							<tr className="border-b">
+	// 								<th scope="col" className="px-6 py-3 text-left">
+	// 									Date
+	// 								</th>
+	// 								<th scope="col" className="px-6 py-3 text-left">
+	// 									Name
+	// 								</th>
+	// 								<th scope="col" className="px-6 py-3 text-left">
+	// 									मकसद
+	// 								</th>
+	// 								<th scope="col" className="px-6 py-3 text-left">
+	// 									Amount
+	// 								</th>
+	// 								<th scope="col" className="px-6 py-3 text-left">
+	// 									Status
+	// 								</th>
+	// 								<th scope="col" className="px-6 py-3 text-left">
+	// 									Delete
+	// 								</th>
+	// 								<th scope="col" className="px-6 py-3 text-left">
+	// 									Info
+	// 								</th>
+	// 							</tr>
+	// 						</thead>
+
+	// 						<tbody className="text-sm text-gray-900 dark:text-white divide-y divide-gray-200 dark:divide-gray-700">
+	// 							{rows.length === 0 ? (
+	// 								<tr className="border-b transition-colors hover:bg-gray-100 dark:hover:bg-gray-700">
+	// 									<td colSpan={7} className="px-6 py-4 text-center">
+	// 										No data available
+	// 									</td>
+	// 								</tr>
+	// 							) : (
+	// 								rows.map((row) => (
+	// 									<tr
+	// 										key={row._id}
+	// 										className="border-b transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+	// 									>
+	// 										<td className="px-6 py-4 whitespace-nowrap">
+	// 											{formatDate(new Date(row.date))}
+	// 										</td>
+	// 										<td className="px-6 py-4">
+	// 											{row.members.find(
+	// 												(member) => member.userId === row.paidBy
+	// 											)?.userName || "Unknown"}
+	// 										</td>
+	// 										<td className="px-6 py-4">{row.description}</td>
+	// 										<td className="px-6 py-4">&#8377;{row.amount}</td>
+	// 										<td className="px-6 py-4">
+	// 											{(() => {
+	// 												const currentUserMember = row.members.find(
+	// 													(member) => member.userId === currentUser.userId
+	// 												);
+
+	// 												if (currentUserMember?.paidStatus) {
+	// 													return (
+	// 														<div className="flex items-center">
+	// 															<CircleCheck className="w-3.5 h-3.5 me-1 text-green-500 dark:text-green-400 flex-shrink-0" />
+	// 															<span>Paid</span>
+	// 														</div>
+	// 													);
+	// 												} else if (
+	// 													currentUserMember &&
+	// 													!currentUserMember.paidStatus
+	// 												) {
+	// 													return (
+	// 														<AlertDialog>
+	// 															<AlertDialogTrigger
+	// 																asChild
+	// 																className="p-2 text-left flex items-center max-w-10 cursor-pointer"
+	// 															>
+	// 																<div className="cursor-pointer hover:text-green-400">
+	// 																	<span className="text-sm">
+	// 																		Pay
+	// 																		<label className="ml-1">
+	// 																			&#8377;
+	// 																			{Math.round(
+	// 																				row.amount / row.members.length
+	// 																			)}
+	// 																		</label>
+	// 																	</span>
+	// 																	<HandCoins className="w-3.5 h-3.5 ml-1 flex-shrink-0" />
+	// 																</div>
+	// 															</AlertDialogTrigger>
+	// 															<AlertDialogContent>
+	// 																<AlertDialogHeader>
+	// 																	<AlertDialogTitle>
+	// 																		Are you absolutely sure?
+	// 																	</AlertDialogTitle>
+	// 																	<AlertDialogDescription>
+	// 																		This action cannot be undone. This will
+	// 																		update the record as paid and update the
+	// 																		ledger of all associated users.
+	// 																	</AlertDialogDescription>
+	// 																</AlertDialogHeader>
+	// 																<AlertDialogFooter>
+	// 																	<AlertDialogCancel>Cancel</AlertDialogCancel>
+	// 																	<AlertDialogAction
+	// 																		className="bg-green-500 text-black hover:bg-green-600"
+	// 																		onClick={() => handleUpdateEntry(row)}
+	// 																	>
+	// 																		Continue
+	// 																	</AlertDialogAction>
+	// 																</AlertDialogFooter>
+	// 															</AlertDialogContent>
+	// 														</AlertDialog>
+	// 													);
+	// 												} else {
+	// 													return null;
+	// 												}
+	// 											})()}
+	// 										</td>
+
+	// 										<td className="px-6 py-4">
+	// 											{row.paidBy === currentUser.userId &&
+	// 												row.members.filter(
+	// 													(member) => member.paidStatus === true
+	// 												).length === 1 && (
+	// 													<AlertDialog>
+	// 														<AlertDialogTrigger asChild>
+	// 															<Button
+	// 																variant="ghost"
+	// 																className="p-2 text-left flex items-center"
+	// 															>
+	// 																<Trash2 className="block h-4 w-4" />
+	// 															</Button>
+	// 														</AlertDialogTrigger>
+	// 														<AlertDialogContent>
+	// 															<AlertDialogHeader>
+	// 																<AlertDialogTitle>
+	// 																	Are you absolutely sure?
+	// 																</AlertDialogTitle>
+	// 																<AlertDialogDescription>
+	// 																	This action cannot be undone. This will delete
+	// 																	the record from the server.
+	// 																</AlertDialogDescription>
+	// 															</AlertDialogHeader>
+	// 															<AlertDialogFooter>
+	// 																<AlertDialogCancel>Cancel</AlertDialogCancel>
+	// 																<AlertDialogAction
+	// 																	className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+	// 																	onClick={() => handleDeleteClick(row._id)}
+	// 																>
+	// 																	Continue
+	// 																</AlertDialogAction>
+	// 															</AlertDialogFooter>
+	// 														</AlertDialogContent>
+	// 													</AlertDialog>
+	// 												)}
+	// 										</td>
+	// 										<td className="px-6 py-4">
+	// 											<Dialog aria-labelledby="dialog-title">
+	// 												<DialogTrigger asChild className="cursor-pointer">
+	// 													<Info />
+	// 												</DialogTrigger>
+	// 												<DialogContent aria-describedby={row.description}>
+	// 													<DialogHeader>
+	// 														<DialogTitle>Members</DialogTitle>
+	// 														<div id="dialog-description">
+	// 															<ul className="mt-2 max-w-md space-y-1 text-gray-500 dark:text-gray-400 grid grid-cols-2 gap-2">
+	// 																{row.members.map((member, idx) => (
+	// 																	<li key={idx} className="flex items-center">
+	// 																		{member.paidStatus ? (
+	// 																			<CircleCheck className="w-3.5 h-3.5 me-1 text-green-500 dark:text-green-400 flex-shrink-0" />
+	// 																		) : (
+	// 																			<Circle className="w-3.5 h-3.5 me-2 flex-shrink-0" />
+	// 																		)}
+	// 																		<div>
+	// 																			<span>{member.userName}</span>
+	// 																			<span className="ml-2">
+	// 																				&#8377;
+	// 																				{Math.round(
+	// 																					row.amount / row.members.length
+	// 																				)}
+	// 																			</span>
+	// 																		</div>
+	// 																	</li>
+	// 																))}
+	// 															</ul>
+	// 														</div>
+	// 													</DialogHeader>
+	// 													<DialogDescription>
+	// 														<label className="mt-1 block">
+	// 															Created At :
+	// 															<span style={{ marginLeft: "8px" }}>{`${new Date(
+	// 																row.createdAt
+	// 															)
+	// 																.toLocaleDateString("en-GB")
+	// 																.replace(/\//g, "-")} ${new Date(
+	// 																	row.createdAt
+	// 																).toLocaleTimeString()}`}</span>
+	// 														</label>
+	// 													</DialogDescription>
+	// 												</DialogContent>
+	// 											</Dialog>
+	// 										</td>
+	// 									</tr>
+	// 								))
+	// 							)}
+	// 						</tbody>
+
+	// 						<tfoot className="bg-gray-200 dark:bg-gray-800">
+	// 							<tr>
+	// 								<th scope="row" className="px-6 py-3 text-base text-left">
+	// 									Total
+	// 								</th>
+	// 								<td className="px-6 py-3"></td>
+	// 								<td className="px-6 py-3"></td>
+	// 								<td className="px-6 py-3">
+	// 									&#8377;{rows.reduce((sum, row) => sum + row.amount, 0)}
+	// 								</td>
+	// 								<td className="px-6 py-3"></td>
+	// 								<td className="px-6 py-3"></td>
+	// 								<td className="px-6 py-3"></td>
+	// 							</tr>
+	// 						</tfoot>
+	// 					</table>
+	// 				</div>
+
+	// 				{/* Pagination controls */}
+	// 				<div className="pagination mt-2">
+	// 					<Pagination>
+	// 						<PaginationContent>
+	// 							<PaginationItem>
+	// 								<PaginationPrevious
+	// 									href="#"
+	// 									onClick={(e) => {
+	// 										e.preventDefault();
+	// 										if (currentPage > 1) handlePaginationClick(currentPage - 1);
+	// 									}}
+	// 									className={
+	// 										currentPage === 1 ? "pointer-events-none opacity-50" : ""
+	// 									}
+	// 								/>
+	// 							</PaginationItem>
+	// 							{Array.from({ length: totalPages }, (_, i) => (
+	// 								<PaginationItem key={i}>
+	// 									<PaginationLink
+	// 										href="#"
+	// 										onClick={(e) => {
+	// 											e.preventDefault();
+	// 											handlePaginationClick(i + 1);
+	// 										}}
+	// 										isActive={currentPage === i + 1}
+	// 									>
+	// 										{i + 1}
+	// 									</PaginationLink>
+	// 								</PaginationItem>
+	// 							))}
+	// 							{totalPages > 5 && currentPage < totalPages - 2 && (
+	// 								<PaginationItem>
+	// 									<PaginationEllipsis />
+	// 								</PaginationItem>
+	// 							)}
+	// 							<PaginationItem>
+	// 								<PaginationNext
+	// 									href="#"
+	// 									onClick={(e) => {
+	// 										e.preventDefault();
+	// 										if (currentPage < totalPages)
+	// 											handlePaginationClick(currentPage + 1);
+	// 									}}
+	// 									className={
+	// 										currentPage === totalPages
+	// 											? "pointer-events-none opacity-50"
+	// 											: ""
+	// 									}
+	// 								/>
+	// 							</PaginationItem>
+	// 						</PaginationContent>
+	// 					</Pagination>
+	// 				</div>
+	// 			</div>
+	// 		</div>
+	// 	</>
+	// );
+
 	return (
 		<>
 			<div className="relative w-full overflow-auto">
@@ -285,12 +659,13 @@ const RoomEntries = () => {
 				<h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
 					Room Entries
 				</h2>
-				<div className="overflow-x-auto">
-					{/* Set Entries size */}
-					<div className="pagesize my-2">
+				{/* Set Entries size */}
+				<div className="filters mb-4">
+					<div className="flex gap-4 items-center my-4">
+						{/* Page Size Dropdown */}
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
-								<Button variant="outline">
+								<Button variant="outline" className="flex items-center">
 									{pageLimit} <ChevronDown className="ml-2" />
 								</Button>
 							</DropdownMenuTrigger>
@@ -309,93 +684,196 @@ const RoomEntries = () => {
 								</DropdownMenuRadioGroup>
 							</DropdownMenuContent>
 						</DropdownMenu>
+
+						{/* Date Range Picker */}
+						<Popover>
+							<PopoverTrigger asChild>
+								<Button
+									id="date"
+									variant="outline"
+									className={cn(
+										"w-[300px] justify-start text-left font-normal",
+										!date && "text-muted-foreground"
+									)}
+								>
+									<CalendarIcon className="mr-2 h-4 w-4" />
+									{date?.from ? (
+										date.to ? (
+											<>
+												{format(date.from, "LLL dd, y")} -{" "}
+												{format(date.to, "LLL dd, y")}
+											</>
+										) : (
+											format(date.from, "LLL dd, y")
+										)
+									) : (
+										<span>Pick a date range</span>
+									)}
+								</Button>
+							</PopoverTrigger>
+							<PopoverContent className="w-auto p-0" align="start">
+								<Calendar
+									initialFocus
+									mode="range"
+									defaultMonth={date?.from}
+									selected={date}
+									onSelect={setDate}
+									numberOfMonths={2}
+									disabled={(date) =>
+										date > new Date() || date < new Date("1900-01-01")
+									}
+								/>
+							</PopoverContent>
+						</Popover>
+						{/* Filter Button */}
+						<Button
+							disabled={date == undefined}
+							variant="secondary"
+							onClick={() => fetchEntries(1)}
+						>
+							Apply
+						</Button>
+						<Button
+							disabled={date == undefined}
+							variant="destructive"
+							onClick={() => fetchEntries(1, true)}
+						>
+							Reset
+						</Button>
 					</div>
+
 					{/* Get Entries */}
-					<table className="w-full table-auto min-w-max">
-						<thead className="text-sm font-medium text-gray-900 dark:text-white bg-gray-200 dark:bg-gray-800">
-							<tr className="border-b">
-								<th scope="col" className="px-6 py-3 text-left">
-									Date
-								</th>
-								<th scope="col" className="px-6 py-3 text-left">
-									Name
-								</th>
-								<th scope="col" className="px-6 py-3 text-left">
-									मकसद
-								</th>
-								<th scope="col" className="px-6 py-3 text-left">
-									Amount
-								</th>
-								<th scope="col" className="px-6 py-3 text-left">
-									Status
-								</th>
-								<th scope="col" className="px-6 py-3 text-left">
-									Delete
-								</th>
-								<th scope="col" className="px-6 py-3 text-left">
-									Info
-								</th>
-							</tr>
-						</thead>
-
-						<tbody className="text-sm text-gray-900 dark:text-white divide-y divide-gray-200 dark:divide-gray-700">
-							{rows.length === 0 ? (
-								<tr className="border-b transition-colors hover:bg-gray-100 dark:hover:bg-gray-700">
-									<td colSpan={7} className="px-6 py-4 text-center">
-										No data available
-									</td>
+					<div className="flex space-x-4">
+						<table className="w-full table-auto min-w-max">
+							<thead className="text-sm font-medium text-gray-900 dark:text-white bg-gray-200 dark:bg-gray-800">
+								<tr className="border-b">
+									<th scope="col" className="px-6 py-3 text-left">
+										Date
+									</th>
+									<th scope="col" className="px-6 py-3 text-left">
+										Name
+									</th>
+									<th scope="col" className="px-6 py-3 text-left">
+										मकसद
+									</th>
+									<th scope="col" className="px-6 py-3 text-left">
+										Amount
+									</th>
+									<th scope="col" className="px-6 py-3 text-left">
+										Status
+									</th>
+									<th scope="col" className="px-6 py-3 text-left">
+										Delete
+									</th>
+									<th scope="col" className="px-6 py-3 text-left">
+										Info
+									</th>
 								</tr>
-							) : (
-								rows.map((row) => (
-									<tr
-										key={row._id}
-										className="border-b transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
-									>
-										<td className="px-6 py-4 whitespace-nowrap">
-											{formatDate(new Date(row.date))}
-										</td>
-										<td className="px-6 py-4">
-											{row.members.find(
-												(member) => member.userId === row.paidBy
-											)?.userName || "Unknown"}
-										</td>
-										<td className="px-6 py-4">{row.description}</td>
-										<td className="px-6 py-4">&#8377;{row.amount}</td>
-										<td className="px-6 py-4">
-											{(() => {
-												const currentUserMember = row.members.find(
-													(member) => member.userId === currentUser.userId
-												);
+							</thead>
 
-												if (currentUserMember?.paidStatus) {
-													return (
-														<div className="flex items-center">
-															<CircleCheck className="w-3.5 h-3.5 me-1 text-green-500 dark:text-green-400 flex-shrink-0" />
-															<span>Paid</span>
-														</div>
+							<tbody className="text-sm text-gray-900 dark:text-white divide-y divide-gray-200 dark:divide-gray-700">
+								{rows.length === 0 ? (
+									<tr className="border-b transition-colors hover:bg-gray-100 dark:hover:bg-gray-700">
+										<td colSpan={7} className="px-6 py-4 text-center">
+											No data available
+										</td>
+									</tr>
+								) : (
+									rows.map((row) => (
+										<tr
+											key={row._id}
+											className="border-b transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+										>
+											<td className="px-6 py-4 whitespace-nowrap">
+												{formatDate(new Date(row.date))}
+											</td>
+											<td className="px-6 py-4">
+												{row.members.find(
+													(member) => member.userId === row.paidBy
+												)?.userName || "Unknown"}
+											</td>
+											<td className="px-6 py-4">{row.description}</td>
+											<td className="px-6 py-4">&#8377;{row.amount}</td>
+											<td className="px-6 py-4">
+												{(() => {
+													const currentUserMember = row.members.find(
+														(member) => member.userId === currentUser.userId
 													);
-												} else if (
-													currentUserMember &&
-													!currentUserMember.paidStatus
-												) {
-													return (
+
+													if (currentUserMember?.paidStatus) {
+														return (
+															<div className="flex items-center">
+																<CircleCheck className="w-3.5 h-3.5 me-1 text-green-500 dark:text-green-400 flex-shrink-0" />
+																<span>Paid</span>
+															</div>
+														);
+													} else if (
+														currentUserMember &&
+														!currentUserMember.paidStatus
+													) {
+														return (
+															<AlertDialog>
+																<AlertDialogTrigger
+																	asChild
+																	className="p-2 text-left flex items-center max-w-10 cursor-pointer"
+																>
+																	<div className="cursor-pointer hover:text-green-400">
+																		<span className="text-sm">
+																			Pay
+																			<label className="ml-1">
+																				&#8377;
+																				{Math.round(
+																					row.amount / row.members.length
+																				)}
+																			</label>
+																		</span>
+																		<HandCoins className="w-3.5 h-3.5 ml-1 flex-shrink-0" />
+																	</div>
+																</AlertDialogTrigger>
+																<AlertDialogContent>
+																	<AlertDialogHeader>
+																		<AlertDialogTitle>
+																			Are you absolutely sure?
+																		</AlertDialogTitle>
+																		<AlertDialogDescription>
+																			This action cannot be undone. This will
+																			update the record as paid and update the
+																			ledger of all associated users.
+																		</AlertDialogDescription>
+																	</AlertDialogHeader>
+																	<AlertDialogFooter>
+																		<AlertDialogCancel>
+																			Cancel
+																		</AlertDialogCancel>
+																		<AlertDialogAction
+																			className="bg-green-500 text-black hover:bg-green-600"
+																			onClick={() => handleUpdateEntry(row)}
+																		>
+																			Continue
+																		</AlertDialogAction>
+																	</AlertDialogFooter>
+																</AlertDialogContent>
+															</AlertDialog>
+														);
+													} else {
+														return null;
+													}
+												})()}
+											</td>
+
+											<td className="px-6 py-4">
+												{row.paidBy === currentUser.userId &&
+													row.members.filter(
+														(member) => member.paidStatus === true
+													).length === 1 && (
 														<AlertDialog>
-															<AlertDialogTrigger
-																asChild
-																className="p-2 text-left flex items-center max-w-10 cursor-pointer"
-															>
-																<div className="cursor-pointer hover:text-green-400">
-																	<span className="text-sm">
-																		Pay
-																		<label className="ml-1">
-																			&#8377;
-																			{Math.round(
-																				row.amount / row.members.length
-																			)}
-																		</label>
-																	</span>
-																	<HandCoins className="w-3.5 h-3.5 ml-1 flex-shrink-0" />
-																</div>
+															<AlertDialogTrigger asChild>
+																<Button
+																	variant="ghost"
+																	className="p-2 text-left flex items-center"
+																>
+																	<Trash2 className="block h-4 w-4" />
+																</Button>
 															</AlertDialogTrigger>
 															<AlertDialogContent>
 																<AlertDialogHeader>
@@ -404,186 +882,146 @@ const RoomEntries = () => {
 																	</AlertDialogTitle>
 																	<AlertDialogDescription>
 																		This action cannot be undone. This will
-																		update the record as paid and update the
-																		ledger of all associated users.
+																		delete the record from the server.
 																	</AlertDialogDescription>
 																</AlertDialogHeader>
 																<AlertDialogFooter>
 																	<AlertDialogCancel>Cancel</AlertDialogCancel>
 																	<AlertDialogAction
-																		className="bg-green-500 text-black hover:bg-green-600"
-																		onClick={() => handleUpdateEntry(row)}
+																		className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+																		onClick={() => handleDeleteClick(row._id)}
 																	>
 																		Continue
 																	</AlertDialogAction>
 																</AlertDialogFooter>
 															</AlertDialogContent>
 														</AlertDialog>
-													);
-												} else {
-													return null;
-												}
-											})()}
-										</td>
+													)}
+											</td>
+											<td className="px-6 py-4">
+												<Dialog aria-labelledby="dialog-title">
+													<DialogTrigger asChild className="cursor-pointer">
+														<Info />
+													</DialogTrigger>
+													<DialogContent aria-describedby={row.description}>
+														<DialogHeader>
+															<DialogTitle>Members</DialogTitle>
+															<div id="dialog-description">
+																<ul className="mt-2 max-w-md space-y-1 text-gray-500 dark:text-gray-400 grid grid-cols-2 gap-2">
+																	{row.members.map((member, idx) => (
+																		<li key={idx} className="flex items-center">
+																			{member.paidStatus ? (
+																				<CircleCheck className="w-3.5 h-3.5 me-1 text-green-500 dark:text-green-400 flex-shrink-0" />
+																			) : (
+																				<Circle className="w-3.5 h-3.5 me-2 flex-shrink-0" />
+																			)}
+																			<div>
+																				<span>{member.userName}</span>
+																				<span className="ml-2">
+																					&#8377;
+																					{Math.round(
+																						row.amount / row.members.length
+																					)}
+																				</span>
+																			</div>
+																		</li>
+																	))}
+																</ul>
+															</div>
+														</DialogHeader>
+														<DialogDescription>
+															<label className="mt-1 block">
+																Created At :
+																<span
+																	style={{ marginLeft: "8px" }}
+																>{`${new Date(row.createdAt)
+																	.toLocaleDateString("en-GB")
+																	.replace(/\//g, "-")} ${new Date(
+																	row.createdAt
+																).toLocaleTimeString()}`}</span>
+															</label>
+														</DialogDescription>
+													</DialogContent>
+												</Dialog>
+											</td>
+										</tr>
+									))
+								)}
+							</tbody>
 
-										<td className="px-6 py-4">
-											{row.paidBy === currentUser.userId &&
-												row.members.filter(
-													(member) => member.paidStatus === true
-												).length === 1 && (
-													<AlertDialog>
-														<AlertDialogTrigger asChild>
-															<Button
-																variant="ghost"
-																className="p-2 text-left flex items-center"
-															>
-																<Trash2 className="block h-4 w-4" />
-															</Button>
-														</AlertDialogTrigger>
-														<AlertDialogContent>
-															<AlertDialogHeader>
-																<AlertDialogTitle>
-																	Are you absolutely sure?
-																</AlertDialogTitle>
-																<AlertDialogDescription>
-																	This action cannot be undone. This will delete
-																	the record from the server.
-																</AlertDialogDescription>
-															</AlertDialogHeader>
-															<AlertDialogFooter>
-																<AlertDialogCancel>Cancel</AlertDialogCancel>
-																<AlertDialogAction
-																	className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-																	onClick={() => handleDeleteClick(row._id)}
-																>
-																	Continue
-																</AlertDialogAction>
-															</AlertDialogFooter>
-														</AlertDialogContent>
-													</AlertDialog>
-												)}
-										</td>
-										<td className="px-6 py-4">
-											<Dialog aria-labelledby="dialog-title">
-												<DialogTrigger asChild className="cursor-pointer">
-													<Info />
-												</DialogTrigger>
-												<DialogContent aria-describedby={row.description}>
-													<DialogHeader>
-														<DialogTitle>Members</DialogTitle>
-														<div id="dialog-description">
-															<ul className="mt-2 max-w-md space-y-1 text-gray-500 dark:text-gray-400 grid grid-cols-2 gap-2">
-																{row.members.map((member, idx) => (
-																	<li key={idx} className="flex items-center">
-																		{member.paidStatus ? (
-																			<CircleCheck className="w-3.5 h-3.5 me-1 text-green-500 dark:text-green-400 flex-shrink-0" />
-																		) : (
-																			<Circle className="w-3.5 h-3.5 me-2 flex-shrink-0" />
-																		)}
-																		<div>
-																			<span>{member.userName}</span>
-																			<span className="ml-2">
-																				&#8377;
-																				{Math.round(
-																					row.amount / row.members.length
-																				)}
-																			</span>
-																		</div>
-																	</li>
-																))}
-															</ul>
-														</div>
-													</DialogHeader>
-													<DialogDescription>
-														<label className="mt-1 block">
-															Created At :
-															<span style={{ marginLeft: "8px" }}>{`${new Date(
-																row.createdAt
-															)
-																.toLocaleDateString("en-GB")
-																.replace(/\//g, "-")} ${new Date(
-																row.createdAt
-															).toLocaleTimeString()}`}</span>
-														</label>
-													</DialogDescription>
-												</DialogContent>
-											</Dialog>
-										</td>
-									</tr>
-								))
-							)}
-						</tbody>
-
-						<tfoot className="bg-gray-200 dark:bg-gray-800">
-							<tr>
-								<th scope="row" className="px-6 py-3 text-base text-left">
-									Total
-								</th>
-								<td className="px-6 py-3"></td>
-								<td className="px-6 py-3"></td>
-								<td className="px-6 py-3">
-									&#8377;{rows.reduce((sum, row) => sum + row.amount, 0)}
-								</td>
-								<td className="px-6 py-3"></td>
-								<td className="px-6 py-3"></td>
-								<td className="px-6 py-3"></td>
-							</tr>
-						</tfoot>
-					</table>
+							<tfoot className="bg-gray-200 dark:bg-gray-800">
+								<tr>
+									<th scope="row" className="px-6 py-3 text-base text-left">
+										Total
+									</th>
+									<td className="px-6 py-3"></td>
+									<td className="px-6 py-3"></td>
+									<td className="px-6 py-3">
+										&#8377;{rows.reduce((sum, row) => sum + row.amount, 0)}
+									</td>
+									<td className="px-6 py-3"></td>
+									<td className="px-6 py-3"></td>
+									<td className="px-6 py-3"></td>
+								</tr>
+							</tfoot>
+						</table>
+					</div>
 				</div>
-
-				{/* Pagination controls */}
-				<div className="pagination mt-2">
-					<Pagination>
-						<PaginationContent>
-							<PaginationItem>
-								<PaginationPrevious
-									href="#"
-									onClick={(e) => {
-										e.preventDefault();
-										if (currentPage > 1) handlePaginationClick(currentPage - 1);
-									}}
-									className={
-										currentPage === 1 ? "pointer-events-none opacity-50" : ""
-									}
-								/>
-							</PaginationItem>
-							{Array.from({ length: totalPages }, (_, i) => (
-								<PaginationItem key={i}>
-									<PaginationLink
+				<div className="overflow-x-auto">
+					{/* Pagination controls */}
+					<div className="pagination mt-4">
+						<Pagination>
+							<PaginationContent>
+								<PaginationItem>
+									<PaginationPrevious
 										href="#"
 										onClick={(e) => {
 											e.preventDefault();
-											handlePaginationClick(i + 1);
+											if (currentPage > 1)
+												handlePaginationClick(currentPage - 1);
 										}}
-										isActive={currentPage === i + 1}
-									>
-										{i + 1}
-									</PaginationLink>
+										className={
+											currentPage === 1 ? "pointer-events-none opacity-50" : ""
+										}
+									/>
 								</PaginationItem>
-							))}
-							{totalPages > 5 && currentPage < totalPages - 2 && (
+								{Array.from({ length: totalPages }, (_, i) => (
+									<PaginationItem key={i}>
+										<PaginationLink
+											href="#"
+											onClick={(e) => {
+												e.preventDefault();
+												handlePaginationClick(i + 1);
+											}}
+											isActive={currentPage === i + 1}
+										>
+											{i + 1}
+										</PaginationLink>
+									</PaginationItem>
+								))}
+								{totalPages > 5 && currentPage < totalPages - 2 && (
+									<PaginationItem>
+										<PaginationEllipsis />
+									</PaginationItem>
+								)}
 								<PaginationItem>
-									<PaginationEllipsis />
+									<PaginationNext
+										href="#"
+										onClick={(e) => {
+											e.preventDefault();
+											if (currentPage < totalPages)
+												handlePaginationClick(currentPage + 1);
+										}}
+										className={
+											currentPage === totalPages
+												? "pointer-events-none opacity-50"
+												: ""
+										}
+									/>
 								</PaginationItem>
-							)}
-							<PaginationItem>
-								<PaginationNext
-									href="#"
-									onClick={(e) => {
-										e.preventDefault();
-										if (currentPage < totalPages)
-											handlePaginationClick(currentPage + 1);
-									}}
-									className={
-										currentPage === totalPages
-											? "pointer-events-none opacity-50"
-											: ""
-									}
-								/>
-							</PaginationItem>
-						</PaginationContent>
-					</Pagination>
+							</PaginationContent>
+						</Pagination>
+					</div>
 				</div>
 			</div>
 		</>

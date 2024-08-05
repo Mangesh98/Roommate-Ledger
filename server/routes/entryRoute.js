@@ -67,59 +67,123 @@ router.post("/new-entry", auth, async (req, res) => {
 	}
 });
 
+// router.post("/get-all-entry", auth, async (req, res) => {
+// 	const { room, userId, name, email } = req.user;
+// 	const { page = 1, limit = 10 } = req.body;
+// 	// console.log(req.body);
+// 	try {
+// 		// Fetch entries with sorting and pagination
+// 		const entries = await entryModel
+// 			.find({ room })
+// 			.sort({ date: -1, createdAt: -1 })
+// 			.skip((page - 1) * limit)
+// 			.limit(limit);
+
+// 		if (!entries) {
+// 			return res
+// 				.status(404)
+// 				.json({ success: false, message: "No entries found for this room" });
+// 		}
+
+// 		const totalEntries = await entryModel.countDocuments({ room }); // Count total entries for pagination info
+// 		const totalPages = Math.ceil(totalEntries / limit); // Calculate total pages
+
+// 		const roomResponse = await roomModel.findOne({ _id: room });
+// 		if (!roomResponse) {
+// 			return res
+// 				.status(401)
+// 				.json({ success: false, message: "Invalid Room !" });
+// 		}
+
+// 		const userData = {
+// 			userId: userId,
+// 			userName: name,
+// 			email: email,
+// 			roomId: room,
+// 			roomName: roomResponse.name,
+// 		};
+
+// 		res.status(200).json({
+// 			success: true,
+// 			entries: entries,
+// 			user: userData,
+// 			pagination: {
+// 				page,
+// 				limit,
+// 				totalPages,
+// 				totalEntries,
+// 			},
+// 		});
+// 	} catch (error) {
+// 		console.error("Failed to fetch entries:", error);
+// 		res
+// 			.status(500)
+// 			.json({ success: false, message: "Server error", error: error.message });
+// 	}
+// });
 router.post("/get-all-entry", auth, async (req, res) => {
-	const { room, userId, name, email } = req.user;
-	const { page = 1, limit = 10 } = req.body;
-	// console.log(req.body);
-	try {
-		// Fetch entries with sorting and pagination
-		const entries = await entryModel
-			.find({ room })
-			.sort({ date: -1, createdAt: -1 })
-			.skip((page - 1) * limit)
-			.limit(limit);
+    const { room, userId, name, email } = req.user;
+    const { page = 1, limit = 10, startDate, endDate } = req.body;
+    
+    try {
+        let query = { room };
+        
+        // Add date range to query if provided
+        if (startDate && endDate) {
+            query.date = {
+                $gte: new Date(startDate),
+                $lte: new Date(endDate)
+            };
+        }
 
-		if (!entries) {
-			return res
-				.status(404)
-				.json({ success: false, message: "No entries found for this room" });
-		}
+        // Fetch entries with sorting and pagination
+        const entries = await entryModel
+            .find(query)
+            .sort({ date: -1, createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit);
 
-		const totalEntries = await entryModel.countDocuments({ room }); // Count total entries for pagination info
-		const totalPages = Math.ceil(totalEntries / limit); // Calculate total pages
+        if (!entries) {
+            return res
+                .status(404)
+                .json({ success: false, message: "No entries found for this room" });
+        }
 
-		const roomResponse = await roomModel.findOne({ _id: room });
-		if (!roomResponse) {
-			return res
-				.status(401)
-				.json({ success: false, message: "Invalid Room !" });
-		}
+        const totalEntries = await entryModel.countDocuments(query); // Count total entries for pagination info
+        const totalPages = Math.ceil(totalEntries / limit); // Calculate total pages
 
-		const userData = {
-			userId: userId,
-			userName: name,
-			email: email,
-			roomId: room,
-			roomName: roomResponse.name,
-		};
+        const roomResponse = await roomModel.findOne({ _id: room });
+        if (!roomResponse) {
+            return res
+                .status(401)
+                .json({ success: false, message: "Invalid Room !" });
+        }
 
-		res.status(200).json({
-			success: true,
-			entries: entries,
-			user: userData,
-			pagination: {
-				page,
-				limit,
-				totalPages,
-				totalEntries,
-			},
-		});
-	} catch (error) {
-		console.error("Failed to fetch entries:", error);
-		res
-			.status(500)
-			.json({ success: false, message: "Server error", error: error.message });
-	}
+        const userData = {
+            userId: userId,
+            userName: name,
+            email: email,
+            roomId: room,
+            roomName: roomResponse.name,
+        };
+
+        res.status(200).json({
+            success: true,
+            entries: entries,
+            user: userData,
+            pagination: {
+                page,
+                limit,
+                totalPages,
+                totalEntries,
+            },
+        });
+    } catch (error) {
+        console.error("Failed to fetch entries:", error);
+        res
+            .status(500)
+            .json({ success: false, message: "Server error", error: error.message });
+    }
 });
 
 router.post("/get-my-entry", auth, async (req, res) => {

@@ -2,10 +2,48 @@
 
 import { EntryFormData, UpdateEntry } from "../types/types";
 
+// export const getEntryAction = async (
+// 	page: number,
+// 	limit: number,
+// 	token: string
+// ) => {
+// 	try {
+// 		const url = `${import.meta.env.VITE_HOST_URL}/entry/get-all-entry`;
+
+// 		if (!token) {
+// 			return { success: false, error: "Unauthorized Access !" };
+// 		}
+
+// 		const response = await fetch(url, {
+// 			method: "POST",
+// 			headers: { "Content-Type": "application/json" },
+// 			body: JSON.stringify({ token, page, limit }),
+// 		});
+
+// 		if (response.ok) {
+// 			const result = await response.json();
+// 			return {
+// 				success: true,
+// 				data: result.entries,
+// 				user: result.user,
+// 				pagination: result.pagination,
+// 			};
+// 		} else {
+// 			return { success: false, error: "Failed to get Entries" };
+// 		}
+// 	} catch (error) {
+// 		console.error("Error during fetching entries:", error);
+// 		return {
+// 			error: "An unexpected error occurred. Please try again later.",
+// 		};
+// 	}
+// };
 export const getEntryAction = async (
 	page: number,
 	limit: number,
-	token: string
+	token: string,
+	startDate?: Date,
+	endDate?: Date
 ) => {
 	try {
 		const url = `${import.meta.env.VITE_HOST_URL}/entry/get-all-entry`;
@@ -17,7 +55,7 @@ export const getEntryAction = async (
 		const response = await fetch(url, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ token, page, limit }),
+			body: JSON.stringify({ token, page, limit, startDate, endDate }),
 		});
 
 		if (response.ok) {
