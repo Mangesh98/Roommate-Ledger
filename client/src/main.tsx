@@ -14,6 +14,7 @@ import RoomEntries from "./components/Tables/RoomEntries/RoomEntries.tsx";
 import Ledger from "./components/Tables/Ledger/Ledger.tsx";
 import { Provider } from "react-redux";
 import store from "./store/store.ts";
+import PaymentConfirmation from "./components/Tables/PaymentConfirmation/PaymentConfirmation.tsx";
 
 const router = createBrowserRouter([
 	{
@@ -28,6 +29,7 @@ const router = createBrowserRouter([
 					{ path: "my-entries", element: <MyEntries /> },
 					{ path: "room-entries", element: <RoomEntries /> },
 					{ path: "ledger", element: <Ledger /> },
+					{ path: "payment-confirmation", element: <PaymentConfirmation /> },
 				],
 			},
 		],

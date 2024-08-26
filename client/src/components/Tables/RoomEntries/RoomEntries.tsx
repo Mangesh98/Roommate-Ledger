@@ -3,15 +3,16 @@ import { useEffect, useMemo, useState } from "react";
 import {
 	deleteEntryAction,
 	getEntryAction,
-	updateEntryAction,
+	paymentRequestAction,
 } from "../../../api/entry";
-import { CurrentUser, EntryType, UpdateEntry } from "../../../types/types";
+import { CurrentUser, EntryType} from "../../../types/types";
 import { useToast } from "../../ui/use-toast";
 import {
 	CalendarIcon,
 	ChevronDown,
 	Circle,
 	CircleCheck,
+	CircleDashed,
 	HandCoins,
 	Info,
 	Trash2,
@@ -126,22 +127,18 @@ const RoomEntries = () => {
 		}
 	};
 	const handleUpdateEntry = async (data: EntryType) => {
-		const updateRecord: UpdateEntry = {
-			entryId: data._id,
-			paidBy: data.paidBy,
-			amount: Math.round(data.amount / data.members.length),
-		};
-		const updateEntryStatus = await updateEntryAction(updateRecord, token);
+		
+		const updateEntryStatus = await paymentRequestAction(data._id, token);
 		if (updateEntryStatus.success) {
 			toast({
-				title: "Entry updated successfully",
-				description: "Entry is removed and Ledger is updated successfully",
+				title: "Request sent successfully",
+				description: "Paid request sent to the Entry Owner Successfully",
 				variant: "default",
 			});
 			await fetchEntries(currentPage);
 		} else {
 			toast({
-				title: "Failed to update entry",
+				title: "Failed to sent request",
 				description: "Something went wrong",
 				variant: "destructive",
 			});
@@ -437,8 +434,14 @@ const RoomEntries = () => {
 													const currentUserMember = row.members.find(
 														(member) => member.userId === currentUser.userId
 													);
-
-													if (currentUserMember?.paidStatus) {
+													if (currentUserMember?.isPending) {
+														return (
+															<div className="flex items-center">
+																<CircleDashed className="w-3.5 h-3.5 me-1 text-red-500 dark:text-red-500 flex-shrink-0" />
+																<span>Pending</span>
+															</div>
+														);
+													} else if (currentUserMember?.paidStatus) {
 														return (
 															<div className="flex items-center">
 																<CircleCheck className="w-3.5 h-3.5 me-1 text-green-500 dark:text-green-400 flex-shrink-0" />

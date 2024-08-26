@@ -122,72 +122,72 @@ router.post("/new-entry", auth, async (req, res) => {
 // 	}
 // });
 router.post("/get-all-entry", auth, async (req, res) => {
-    const { room, userId, name, email } = req.user;
-    const { page = 1, limit = 10, startDate, endDate } = req.body;
-    
-    try {
-        let query = { room };
-        
-        // Add date range to query if provided
-        if (startDate && endDate) {
-            query.date = {
-                $gte: new Date(startDate),
-                $lte: new Date(endDate)
-            };
-        }
+	const { room, userId, name, email } = req.user;
+	const { page = 1, limit = 10, startDate, endDate } = req.body;
 
-        // Fetch entries with sorting and pagination
-        const entries = await entryModel
-            .find(query)
-            .sort({ date: -1, createdAt: -1 })
-            .skip((page - 1) * limit)
-            .limit(limit);
+	try {
+		let query = { room };
 
-        if (!entries) {
-            return res
-                .status(404)
-                .json({ success: false, message: "No entries found for this room" });
-        }
+		// Add date range to query if provided
+		if (startDate && endDate) {
+			query.date = {
+				$gte: new Date(startDate),
+				$lte: new Date(endDate),
+			};
+		}
 
-        const totalEntries = await entryModel.countDocuments(query); // Count total entries for pagination info
-        const totalPages = Math.ceil(totalEntries / limit); // Calculate total pages
+		// Fetch entries with sorting and pagination
+		const entries = await entryModel
+			.find(query)
+			.sort({ date: -1, createdAt: -1 })
+			.skip((page - 1) * limit)
+			.limit(limit);
 
-        const roomResponse = await roomModel.findOne({ _id: room });
-        if (!roomResponse) {
-            return res
-                .status(401)
-                .json({ success: false, message: "Invalid Room !" });
-        }
+		if (!entries) {
+			return res
+				.status(404)
+				.json({ success: false, message: "No entries found for this room" });
+		}
 
-        const userData = {
-            userId: userId,
-            userName: name,
-            email: email,
-            roomId: room,
-            roomName: roomResponse.name,
-        };
+		const totalEntries = await entryModel.countDocuments(query); // Count total entries for pagination info
+		const totalPages = Math.ceil(totalEntries / limit); // Calculate total pages
 
-        res.status(200).json({
-            success: true,
-            entries: entries,
-            user: userData,
-            pagination: {
-                page,
-                limit,
-                totalPages,
-                totalEntries,
-            },
-        });
-    } catch (error) {
-        console.error("Failed to fetch entries:", error);
-        res
-            .status(500)
-            .json({ success: false, message: "Server error", error: error.message });
-    }
+		const roomResponse = await roomModel.findOne({ _id: room });
+		if (!roomResponse) {
+			return res
+				.status(401)
+				.json({ success: false, message: "Invalid Room !" });
+		}
+
+		const userData = {
+			userId: userId,
+			userName: name,
+			email: email,
+			roomId: room,
+			roomName: roomResponse.name,
+		};
+
+		res.status(200).json({
+			success: true,
+			entries: entries,
+			user: userData,
+			pagination: {
+				page,
+				limit,
+				totalPages,
+				totalEntries,
+			},
+		});
+	} catch (error) {
+		console.error("Failed to fetch entries:", error);
+		res
+			.status(500)
+			.json({ success: false, message: "Server error", error: error.message });
+	}
 });
 
 router.post("/get-my-entry", auth, async (req, res) => {
-	const { room, userId, name } = req.user;
+	const { room, userId } = req.user;
 	let { page = 1, limit = 10 } = req.body;
 
 	// Ensure page and limit are valid numbers
@@ -233,13 +233,12 @@ router.post("/get-my-entry", auth, async (req, res) => {
 });
 
 router.post("/update-entry", auth, async (req, res) => {
-	const { entryId, paidBy, amount } = req.body.data;
-	const { userId } = req.user;
+	const { entryId, paidBy, amount, userId } = req.body.data;
 
 	try {
 		const updatedEntry = await entryModel.findOneAndUpdate(
 			{ _id: entryId, "members.userId": userId },
-			{ $set: { "members.$.paidStatus": true } },
+			{ $set: { "members.$.paidStatus": true, "members.$.isPending": false } },
 			{ new: true }
 		);
 
@@ -283,6 +282,81 @@ router.post("/delete-entry", auth, async (req, res) => {
 			.json({ success: true, message: "Entry deleted successfully" });
 	} catch (error) {
 		console.error("Failed to delete entry:", error);
+		res
+			.status(500)
+			.json({ success: false, message: "Server error", error: error.message });
+	}
+});
+router.post("/payment-request", auth, async (req, res) => {
+	const { entryId } = req.body;
+	const { userId } = req.user;
+
+	try {
+		// Update Pending status of the entry
+		const updatedPendingStatus = await entryModel.findOneAndUpdate(
+			{ _id: entryId, "members.userId": userId },
+			{ $set: { "members.$.isPending": true } },
+			{ new: true }
+		);
+		if (!updatedPendingStatus) {
+			res
+				.status(400)
+				.json({ success: false, message: "Failed to update pending status" });
+		}
+
+		res
+			.status(201)
+			.json({ success: true, message: "Request Sent Successfully" });
+	} catch (error) {
+		console.error("Failed to sent request:", error);
+		res.status(500).json({
+			success: false,
+			message: "Server error",
+			error: error.message,
+		});
+	}
+});
+
+router.post("/get-pending-requests", auth, async (req, res) => {
+	const { room, userId } = req.user;
+	let { page = 1, limit = 10 } = req.body;
+
+	// Ensure page and limit are valid numbers
+	page = Math.max(page, 1);
+	limit = Math.max(limit, 1);
+
+	try {
+		// Fetch entries with sorting and pagination
+		const entries = await entryModel
+			.find({ room, paidBy: userId, "members.isPending": true })
+			.sort({ date: -1 })
+			.skip((page - 1) * limit)
+			.limit(limit);
+
+		if (!entries.length) {
+			return res
+				.status(404)
+				.json({ success: true, message: "No Pending Requests" });
+		}
+
+		const totalEntries = await entryModel.countDocuments({
+			room,
+			paidBy: userId,
+		}); // Count total entries for pagination info
+		const totalPages = Math.ceil(totalEntries / limit); // Calculate total pages
+
+		res.status(200).json({
+			success: true,
+			entries: entries,
+			pagination: {
+				page,
+				limit,
+				totalPages,
+				totalEntries,
+			},
+		});
+	} catch (error) {
+		console.error("Failed to fetch pending requests:", error);
 		res
 			.status(500)
 			.json({ success: false, message: "Server error", error: error.message });

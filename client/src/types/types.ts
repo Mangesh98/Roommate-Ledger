@@ -1,4 +1,5 @@
 export interface MembersType {
+	isPending: boolean;
 	userId: string;
 	userName: string;
 	paidStatus: boolean;
@@ -20,6 +21,7 @@ export interface UpdateEntry {
 	entryId: string;
 	paidBy: string;
 	amount: number;
+	userId: string;
 }
 
 interface LedgerMembersType {

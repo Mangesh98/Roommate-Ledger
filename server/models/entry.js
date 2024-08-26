@@ -35,7 +35,11 @@ const entrySchema = mongoose.Schema({
             paidStatus:{
                 type:Boolean,
                 default:false,
-            }
+            },
+			isPending:{
+				type:Boolean,
+				default:false,
+			},
 		},
 	],
 	createdAt: {

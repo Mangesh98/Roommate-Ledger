@@ -100,6 +100,9 @@ const Navbar = () => {
 									<DropdownMenuRadioItem value="Ledger">
 										Ledger
 									</DropdownMenuRadioItem>
+									<DropdownMenuRadioItem value="Payment Confirmation">
+										Payment Confirmation
+									</DropdownMenuRadioItem>
 								</DropdownMenuRadioGroup>
 							</DropdownMenuContent>
 						</DropdownMenu>
@@ -141,6 +144,17 @@ const Navbar = () => {
 								})}
 							>
 								Ledger
+							</NavLink>
+						</li>
+						<li>
+							<NavLink
+								to="/payment-confirmation"
+								className="block py-2 px-3 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 md:dark:hover:bg-transparent dark:border-gray-700"
+								style={({ isActive }) => ({
+									color: isActive ? "#1d4ed8" : "white",
+								})}
+							>
+								Payment Confirmation
 							</NavLink>
 						</li>
 					</ul>

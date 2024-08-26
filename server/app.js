@@ -15,7 +15,7 @@ const corsOptions = {
 	methods: "GET, POST", // Allowed HTTP methods
 	allowedMethods: ["GET", "POST", "OPTIONS"], // Include OPTIONS for preflight requests
 };
-
+// 
 app.use(cors(corsOptions));
 
 // Parse incoming request bodies as JSON

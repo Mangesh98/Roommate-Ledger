@@ -48,7 +48,7 @@ export const getAssociatedEntriesAction = async (
 
 		if (response.ok) {
 			const result = await response.json();
-			console.log(result);
+			// console.log(result);
 			
 			return {
 				success: true,
