@@ -339,10 +339,12 @@ router.post("/get-pending-requests", auth, async (req, res) => {
 				.json({ success: true, message: "No Pending Requests" });
 		}
 
-		const totalEntries = await entryModel.countDocuments({
-			room,
-			paidBy: userId,
-		}); // Count total entries for pagination info
+		// const totalEntries = await entryModel.countDocuments({
+		// 	room,
+		// 	paidBy: userId,
+		// }); // Count total entries for pagination info
+
+		const totalEntries = entries.length;
 		const totalPages = Math.ceil(totalEntries / limit); // Calculate total pages
 
 		res.status(200).json({
