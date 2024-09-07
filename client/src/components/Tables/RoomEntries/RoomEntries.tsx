@@ -5,7 +5,7 @@ import {
 	getEntryAction,
 	paymentRequestAction,
 } from "../../../api/entry";
-import { CurrentUser, EntryType} from "../../../types/types";
+import { CurrentUser, EntryType } from "../../../types/types";
 import { useToast } from "../../ui/use-toast";
 import {
 	CalendarIcon,
@@ -127,7 +127,6 @@ const RoomEntries = () => {
 		}
 	};
 	const handleUpdateEntry = async (data: EntryType) => {
-		
 		const updateEntryStatus = await paymentRequestAction(data._id, token);
 		if (updateEntryStatus.success) {
 			toast({
@@ -571,6 +570,9 @@ const RoomEntries = () => {
 															</div>
 														</DialogHeader>
 														<DialogDescription>
+															<label className="mt-1 block">
+																Total Amount : &#8377; {row.amount}
+															</label>
 															<label className="mt-1 block">
 																Created At :
 																<span

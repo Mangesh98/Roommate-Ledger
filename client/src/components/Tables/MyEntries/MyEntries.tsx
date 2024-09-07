@@ -193,6 +193,9 @@ const MyEntries = () => {
 													</DialogHeader>
 													<DialogDescription>
 														<label className="mt-1 block">
+															Total Amount : &#8377; {row.amount}
+														</label>
+														<label className="mt-1 block">
 															Created At :
 															<span style={{ marginLeft: "8px" }}>{`${new Date(
 																row.createdAt

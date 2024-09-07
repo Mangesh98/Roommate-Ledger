@@ -202,62 +202,55 @@ router.post("/get-ledger", auth, async (req, res) => {
 
 router.post("/get-associated-entries", auth, async (req, res) => {
 	const { room, userId } = req.user;
-	const { memberId } = req.body;
-	const { page = 1, limit = 10 } = req.body;
-	// console.log("room: " + room + " paidBy:" + userId + " memberId:" + memberId);
+	const { memberId, page = 1, limit = 10 } = req.body;
+
 	try {
-		const entries = await entryModel
-			.find({
-				room,
-				$or: [
-					{
-						paidBy: memberId,
-						members: {
-							$elemMatch: {
-								userId: userId,
-								paidStatus: false,
-							},
-						},
-					},
-					{
-						paidBy: userId,
-						members: {
-							$elemMatch: {
-								userId: memberId,
-								paidStatus: false,
-							},
-						},
-					},
-				],
-			})
-			.sort({ date: -1 })
+		// Build the query conditions
+		const queries = [
+			{
+				paidBy: userId,
+				members: { $elemMatch: { userId: memberId, paidStatus: false } },
+			},
+			{
+				paidBy: memberId,
+				members: { $elemMatch: { userId: userId, paidStatus: false } },
+			},
+		];
+
+		// Fetch the associated entries with pagination
+		const entriesPromise = entryModel
+			.find({ room, $or: queries })
+			.sort({ date: -1, createdAt: -1 })
 			.skip((page - 1) * limit)
 			.limit(limit);
 
+		// Count the total entries matching the criteria
+		const totalEntriesPromise = entryModel.countDocuments({
+			room,
+			$or: queries,
+		});
 
-		// console.log(entries);
-		if (!entries) {
+		// Await both promises simultaneously
+		const [entries, totalEntries] = await Promise.all([
+			entriesPromise,
+			totalEntriesPromise,
+		]);
+
+		// Check if entries exist
+		if (!entries.length) {
 			return res
-				.status(404)
-				.json({ success: false, message: "No associated entries found !" });
+				.status(200)
+				.json({ success: false, message: "No associated entries found!" });
 		}
 
-		const totalEntries = entries.length;
-		const totalPages = Math.ceil(totalEntries / limit); // Calculate total pages
-		if(entries.length === 0){
-			return res
-			.status(200)
-			.json({ success: false, message: "No associated entries found !" });
-		}
+		// Calculate total pages
+		const totalPages = Math.ceil(totalEntries / limit);
+
+		// Send response
 		res.status(200).json({
 			success: true,
-			entries: entries,
-			pagination: {
-				page,
-				limit,
-				totalPages,
-				totalEntries,
-			},
+			entries,
+			pagination: { page, limit, totalPages, totalEntries },
 		});
 	} catch (error) {
 		console.error("Failed to fetch associated entries:", error);
