@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { EntryFormData, RoomMembers } from "../../types/types";
+import { Categories, EntryFormData, RoomMembers } from "../../types/types";
 import { useCookies } from "react-cookie";
 import { getRoomDetailsAction } from "../../api/room";
 import { Link, useNavigate } from "react-router-dom";
@@ -9,11 +9,19 @@ import { useToast } from "../ui/use-toast";
 import { createEntryAction } from "../../api/entry";
 import { Button } from "../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2, X } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Calendar } from "../ui/calendar";
 import { addDays, format } from "date-fns";
 import { NewEntrySchema } from "../../schemas/entrySchema";
+import { PopoverClose } from "@radix-ui/react-popover";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "../ui/select";
 
 const NewEntry = () => {
 	const router = useNavigate();
@@ -21,6 +29,7 @@ const NewEntry = () => {
 	const token = cookies.token;
 	const { toast } = useToast();
 	const [roomMembers, setRoomMembers] = useState<RoomMembers[]>([]);
+	const [categories, setCategories] = useState<Categories[]>([]);
 	const [date, setDate] = useState<Date>();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -38,6 +47,7 @@ const NewEntry = () => {
 		async function fetchMembers() {
 			try {
 				const roomDetails = await getRoomDetailsAction(token);
+				setCategories(roomDetails.categories);
 				setRoomMembers(roomDetails.members);
 			} catch (error) {
 				console.error("Failed to fetch members:", error);
@@ -112,6 +122,35 @@ const NewEntry = () => {
 				</div>
 				<div className="mb-5">
 					<label
+						htmlFor="categories"
+						className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+					>
+						Categories
+					</label>
+					<Controller
+						name="category"
+						control={control}
+						render={({ field }) => (
+							<Select onValueChange={(value) => field.onChange(value)}>
+								<SelectTrigger>
+									<SelectValue placeholder="Select Category" />
+								</SelectTrigger>
+								<SelectContent>
+									{categories.map((category) => (
+										<SelectItem key={category._id} value={category._id}>
+											{category.name}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						)}
+					/>
+					{errors.category && (
+						<p className="text-red-500 text-sm">{errors.category.message}</p>
+					)}
+				</div>
+				<div className="mb-5">
+					<label
 						htmlFor="price"
 						className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
 					>
@@ -153,7 +192,16 @@ const NewEntry = () => {
 										{date ? format(date, "PPP") : <span>Pick a date</span>}
 									</Button>
 								</PopoverTrigger>
-								<PopoverContent className="w-auto p-0" align="start">
+								<PopoverContent
+									className="w-auto p-0 relative pt-8"
+									align="start"
+								>
+									<PopoverClose className="absolute top-2 right-2">
+										<X
+											size={24}
+											className="text-primary/60 hover:text-destructive"
+										/>
+									</PopoverClose>
 									<Calendar
 										mode="single"
 										selected={date}

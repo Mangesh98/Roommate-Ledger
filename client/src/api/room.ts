@@ -2,7 +2,6 @@ export const getRoomDetailsAction = async (token: string) => {
 	try {
 		const url = `${import.meta.env.VITE_HOST_URL}/room/get-room-details`;
 
-		
 		if (!token) {
 			return { success: false, error: "Unauthorized Access !" };
 		}
@@ -14,7 +13,11 @@ export const getRoomDetailsAction = async (token: string) => {
 
 		if (response.ok) {
 			const result = await response.json();
-			return { success: true, members: result.members };
+			return {
+				success: true,
+				members: result.members,
+				categories: result.categories,
+			};
 		} else {
 			return { success: false, error: "Failed to create room" };
 		}

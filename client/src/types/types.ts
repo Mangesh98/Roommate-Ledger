@@ -13,6 +13,7 @@ export interface EntryType {
 	description: string;
 	amount: number;
 	paidBy: string;
+	category: string;
 	createdAt: Date;
 	members: MembersType[];
 }
@@ -51,11 +52,15 @@ export interface RoomMembers {
 	userId: string;
 	userName: string;
 }
-
+export interface Categories {
+	_id: string;
+	name: string;
+}
 export interface EntryFormData {
 	description: string;
 	price?: number;
 	date: string;
+	category: string;
 	selectedMembers: string[];
 }
 

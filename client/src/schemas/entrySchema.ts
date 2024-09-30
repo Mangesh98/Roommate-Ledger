@@ -9,6 +9,7 @@ export const NewEntrySchema = z.object({
 		})
 	),
 	date: z.string(),
+	category: z.string(),
 	selectedMembers: z.preprocess((val) => {
 		if (typeof val === "string") {
 			return [val];

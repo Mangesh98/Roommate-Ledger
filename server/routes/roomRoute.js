@@ -2,6 +2,7 @@ const express = require("express");
 const roomModel = require("../models/room");
 const auth = require("../lib/auth");
 const room = require("../models/room");
+const categoryModel = require("../models/category");
 const router = express.Router();
 
 router.post("/create-room", auth, async (req, res) => {
@@ -26,7 +27,7 @@ router.post("/create-room", auth, async (req, res) => {
 
 router.post("/get-room-details", auth, async (req, res) => {
 	const roomId = req.user.room;
-	const userId = req.user.userId; 
+	const userId = req.user.userId;
 
 	try {
 		const room = await roomModel.findById(roomId);
@@ -37,7 +38,7 @@ router.post("/get-room-details", auth, async (req, res) => {
 
 		// Filter out the current user's details
 		const members = room.members
-		// .filter((member) => member.userId.toString() !== userId.toString())
+			// .filter((member) => member.userId.toString() !== userId.toString())
 			.filter(
 				(member) =>
 					member.userId.toString() !== userId.toString() && member.active // added - filter by member active status
@@ -47,12 +48,17 @@ router.post("/get-room-details", auth, async (req, res) => {
 				userName: member.userName,
 				_id: member._id,
 			}));
-			// console.log(members);
-		res.status(200).json({ success: true, members: members });
-	} catch (error) {
+		const categories = await categoryModel.find().sort({ name: 1 }); // added - get categories for the room
+		// console.log("categories : ", categories);
 		res
-			.status(500)
-			.json({ success: false, message: "Server error", error: error.message });
+			.status(200)
+			.json({ success: true, members: members, categories: categories });
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "Server error",
+			error: error.message,
+		});
 	}
 });
 

@@ -11,7 +11,7 @@ const {
 const router = express.Router();
 
 router.post("/new-entry", auth, async (req, res) => {
-	const { date, description, price } = req.body.data;
+	const { date, description, price,category } = req.body.data;
 	const { userId, room } = req.user;
 	let { selectedMembers } = req.body.data;
 	selectedMembers.push(userId);
@@ -50,6 +50,7 @@ router.post("/new-entry", auth, async (req, res) => {
 			description,
 			amount: price,
 			paidBy: userId,
+			category,
 			members: members,
 		});
 
