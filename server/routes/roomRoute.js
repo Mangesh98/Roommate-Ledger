@@ -37,7 +37,11 @@ router.post("/get-room-details", auth, async (req, res) => {
 
 		// Filter out the current user's details
 		const members = room.members
-			.filter((member) => member.userId.toString() !== userId.toString())
+		// .filter((member) => member.userId.toString() !== userId.toString())
+			.filter(
+				(member) =>
+					member.userId.toString() !== userId.toString() && member.active // added - filter by member active status
+			)
 			.map((member) => ({
 				userId: member.userId,
 				userName: member.userName,
