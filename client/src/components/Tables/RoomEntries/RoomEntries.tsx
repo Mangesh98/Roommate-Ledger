@@ -68,6 +68,7 @@ import { DateRange } from "react-day-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover";
 import { format } from "date-fns";
 import { Calendar } from "../../ui/calendar";
+import { number } from "zod";
 
 const RoomEntries = () => {
 	const [rows, setRows] = useState<EntryType[]>([]);
@@ -206,6 +207,26 @@ const RoomEntries = () => {
 	const handlePaginationClick = (page: number) => {
 		fetchEntries(page);
 	};
+
+	const getPaginationPages = (currentPage :number, totalPages:number) => {
+	let startPage = Math.max(currentPage - 1, 1);
+	let endPage = Math.min(currentPage + 2, totalPages);
+  
+	if (currentPage === 1) {
+	  endPage = Math.min(4, totalPages);
+	}
+	if (currentPage === totalPages) {
+	  startPage = Math.max(totalPages - 3, 1);
+	}
+  
+	const pages = [];
+	for (let i = startPage; i <= endPage; i++) {
+	  pages.push(i);
+	}
+	return pages;
+  };
+  
+
 
 	if (loading) {
 		return (
@@ -610,62 +631,99 @@ const RoomEntries = () => {
 						</table>
 					</div>
 				</div>
-				<div className="overflow-x-auto">
-					{/* Pagination controls */}
-					<div className="pagination mt-4">
-						<Pagination>
-							<PaginationContent>
-								<PaginationItem>
-									<PaginationPrevious
-										href="#"
-										onClick={(e) => {
-											e.preventDefault();
-											if (currentPage > 1)
-												handlePaginationClick(currentPage - 1);
-										}}
-										className={
-											currentPage === 1 ? "pointer-events-none opacity-50" : ""
-										}
-									/>
-								</PaginationItem>
-								{Array.from({ length: totalPages }, (_, i) => (
-									<PaginationItem key={i}>
-										<PaginationLink
-											href="#"
-											onClick={(e) => {
-												e.preventDefault();
-												handlePaginationClick(i + 1);
-											}}
-											isActive={currentPage === i + 1}
-										>
-											{i + 1}
-										</PaginationLink>
-									</PaginationItem>
-								))}
-								{totalPages > 5 && currentPage < totalPages - 2 && (
-									<PaginationItem>
-										<PaginationEllipsis />
-									</PaginationItem>
-								)}
-								<PaginationItem>
-									<PaginationNext
-										href="#"
-										onClick={(e) => {
-											e.preventDefault();
-											if (currentPage < totalPages)
-												handlePaginationClick(currentPage + 1);
-										}}
-										className={
-											currentPage === totalPages
-												? "pointer-events-none opacity-50"
-												: ""
-										}
-									/>
-								</PaginationItem>
-							</PaginationContent>
-						</Pagination>
-					</div>
+				
+				<div className="w-full flex justify-center mt-4">
+  <Pagination>
+    <PaginationContent className="flex items-center space-x-2">
+      {/* Previous Button */}
+      <PaginationItem>
+        <PaginationPrevious
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            if (currentPage > 1) handlePaginationClick(currentPage - 1);
+          }}
+          className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+        />
+      </PaginationItem>
+
+      {/* Optionally display first page and ellipsis if needed */}
+      {getPaginationPages(currentPage, totalPages)[0] > 1 && (
+        <>
+          <PaginationItem>
+            <PaginationLink
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                handlePaginationClick(1);
+              }}
+            >
+              1
+            </PaginationLink>
+          </PaginationItem>
+          {getPaginationPages(currentPage, totalPages)[0] > 2 && (
+            <PaginationItem>
+              <PaginationEllipsis />
+            </PaginationItem>
+          )}
+        </>
+      )}
+
+      {/* Display the window of pages */}
+      {getPaginationPages(currentPage, totalPages).map((page) => (
+        <PaginationItem key={page}>
+          <PaginationLink
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              handlePaginationClick(page);
+            }}
+            isActive={currentPage === page}
+          >
+            {page}
+          </PaginationLink>
+        </PaginationItem>
+      ))}
+
+      {/* Optionally display ellipsis and last page if needed */}
+      {getPaginationPages(currentPage, totalPages).slice(-1)[0] < totalPages && (
+        <>
+          {getPaginationPages(currentPage, totalPages).slice(-1)[0] < totalPages - 1 && (
+            <PaginationItem>
+              <PaginationEllipsis />
+            </PaginationItem>
+          )}
+          <PaginationItem>
+            <PaginationLink
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                handlePaginationClick(totalPages);
+              }}
+            >
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        </>
+      )}
+
+      {/* Next Button */}
+      <PaginationItem>
+        <PaginationNext
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            if (currentPage < totalPages) handlePaginationClick(currentPage + 1);
+          }}
+          className={
+            currentPage === totalPages ? "pointer-events-none opacity-50" : ""
+          }
+        />
+      </PaginationItem>
+    </PaginationContent>
+  </Pagination>
 				</div>
+
 			</div>
 		</>
 	);
