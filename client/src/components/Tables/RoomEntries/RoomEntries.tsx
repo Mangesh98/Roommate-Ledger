@@ -5,7 +5,7 @@ import {
   getEntryAction,
   paymentRequestAction,
 } from "../../../api/entry";
-import { CurrentUser, EntryType } from "../../../types/types";
+import { CurrentUser, EntryType, RoomMembers } from "../../../types/types";
 import { useToast } from "../../ui/use-toast";
 import {
   CalendarIcon,
@@ -68,6 +68,7 @@ import { DateRange } from "react-day-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover";
 import { format } from "date-fns";
 import { Calendar } from "../../ui/calendar";
+import { getRoomDetailsAction } from "../../../api/room";
 
 const RoomEntries = () => {
   const [rows, setRows] = useState<EntryType[]>([]);
@@ -84,6 +85,7 @@ const RoomEntries = () => {
   const dispatch = useDispatch<AppDispatch>();
   const currentUser = useSelector((state: RootState) => state.currentUser);
   const [date, setDate] = useState<DateRange | undefined>(undefined);
+  const [roomMembers, setRoomMembers] = useState<RoomMembers[]>([]);
 
   const fetchEntries = async (page: number, filter?: boolean) => {
     setLoading(true);
@@ -128,23 +130,29 @@ const RoomEntries = () => {
   };
 
   // Mark as paid to all entries
-  const handleMarkAsPaid = async () => {
+  const handleMarkAsPaid = async (targetUserId: string) => {
     setLoading(true);
     try {
       const response = await getEntryAction(1, parseInt(pageLimit), token);
-
       if (response.error) {
         throw new Error("Failed to fetch entries");
       }
 
       const userData: CurrentUser = response.user;
       const entries: EntryType[] = response.data;
-      const entriesToMarkAsPaid = entries.filter(
-        (entry) =>
-          entry.members.find((member) => member.userId === userData.userId)?.paidStatus === false &&
-          entry.members.find((member) => member.userId === userData.userId)?.isPending === false
-      );
 
+      let entriesToMarkAsPaid = entries.filter(
+        (entry) =>
+          entry.members.find((member) => member.userId === userData.userId)
+            ?.paidStatus === false &&
+          entry.members.find((member) => member.userId === userData.userId)
+            ?.isPending === false
+      );
+      if (targetUserId !== "All") {
+        entriesToMarkAsPaid = entriesToMarkAsPaid.filter(
+          (entry) => entry.paidBy === targetUserId
+        );
+      }
       if (entriesToMarkAsPaid.length === 0) {
         toast({
           variant: "default",
@@ -181,6 +189,19 @@ const RoomEntries = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    async function fetchMembers() {
+      try {
+        const roomDetails = await getRoomDetailsAction(token);
+        setRoomMembers(roomDetails.members);
+      } catch (error) {
+        console.error("Failed to fetch members:", error);
+      }
+    }
+
+    fetchMembers();
+  }, [token]);
 
   const handleUpdateEntry = async (data: EntryType) => {
     const updateEntryStatus = await paymentRequestAction(data._id, token);
@@ -451,21 +472,51 @@ const RoomEntries = () => {
             {/* Mark all as paid Button */}
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive">Mark All as Paid</Button>
+                <Button variant="destructive">Mark Payments</Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogTitle>Select Payment Action</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This action cannot be undone. This will update the record as
-                    paid and update the ledger of all associated users.
+                    Choose a user to mark their payments or mark all as paid.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
+
+                <div className="flex flex-col gap-2">
+                  {/* Mark All button */}
+                  <AlertDialogAction
+                    onClick={() => handleMarkAsPaid("All")}
+                    className="bg-destructive hover:bg-destructive/90 text-white"
+                  >
+                    Mark All as Paid
+                  </AlertDialogAction>
+
+                  {/* Divider */}
+                  <div className="relative my-2">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Or select individual user
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Room member buttons */}
+                  {roomMembers.map((member) => (
+                    <AlertDialogAction
+                      key={member._id}
+                      onClick={() => handleMarkAsPaid(member.userId)}
+                      className="w-full"
+                    >
+                      Mark {member.userName}'s Payments
+                    </AlertDialogAction>
+                  ))}
+                </div>
+
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleMarkAsPaid}>
-                    Continue
-                  </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>

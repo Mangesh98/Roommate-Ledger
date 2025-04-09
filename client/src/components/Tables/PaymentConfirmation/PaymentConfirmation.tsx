@@ -4,7 +4,7 @@ import {
   getPendingRequestsAction,
   updateEntryAction,
 } from "../../../api/entry";
-import { EntryType, UpdateEntry } from "../../../types/types";
+import { EntryType, RoomMembers, UpdateEntry } from "../../../types/types";
 
 import { formatDate } from "../../../lib/utils";
 
@@ -42,6 +42,7 @@ import {
   AlertDialogAction,
 } from "../../ui/alert-dialog";
 import { toast } from "../../ui/use-toast";
+import { getRoomDetailsAction } from "../../../api/room";
 
 const PaymentConfirmation = () => {
   const pageLimit = 10;
@@ -51,6 +52,20 @@ const PaymentConfirmation = () => {
   const [cookies] = useCookies();
   const token = cookies.token;
   const [loading, setLoading] = useState<boolean>(true);
+
+  const [roomMembers, setRoomMembers] = useState<RoomMembers[]>([]);
+
+  useEffect(() => {
+    async function fetchMembers() {
+      try {
+        const roomDetails = await getRoomDetailsAction(token);
+        setRoomMembers(roomDetails.members);
+      } catch (error) {
+        console.error("Failed to fetch members:", error);
+      }
+    }
+    fetchMembers();
+  }, [token]);
 
   const fetchData = async (page: number) => {
     setLoading(true);
@@ -93,10 +108,7 @@ const PaymentConfirmation = () => {
         amount: Math.round(data.amount / data.members.length),
         userId: EntryUserId,
       };
-      // console.log(updateRecord);
-
       const updateEntryStatus = await updateEntryAction(updateRecord, token);
-      // console.log(updateEntryStatus);
 
       if (updateEntryStatus.success) {
         toast({
@@ -112,8 +124,6 @@ const PaymentConfirmation = () => {
           variant: "destructive",
         });
       }
-
-      // console.log(data);
     } catch (error) {
       toast({
         title: "Failed to update entry",
@@ -123,10 +133,22 @@ const PaymentConfirmation = () => {
     }
   }
 
-  async function handleMarkAllAsPaid() {
+  async function handleMarkAllAsPaid(targetUserId: string) {
     setLoading(true);
     try {
-      const updatePromises = filteredRows.flatMap((row) =>
+      let entriesToProcess = filteredRows;
+      // Filter entries based on targetUserId if specified
+
+      if (targetUserId !== "All") {
+        // Find entries where the targeted user is a member
+        entriesToProcess = filteredRows.filter((row) =>
+          row.members.some(
+            (member) => member.userId === targetUserId && member.isPending
+          )
+        );
+      }
+
+      const updatePromises = entriesToProcess.flatMap((row) =>
         row.members
           .filter((member) => member.isPending)
           .map((pendingMember) => {
@@ -140,15 +162,24 @@ const PaymentConfirmation = () => {
           })
       );
 
-      const results = await Promise.all(updatePromises);
+      if (updatePromises.length === 0) {
+        toast({
+          variant: "default",
+          title: "No entries to mark as paid",
+          description: "All entries are already paid",
+        });
+        setLoading(false);
+        return;
+      }
 
+      const results = await Promise.all(updatePromises);
       const allSuccess = results.every((result) => result.success);
 
       if (allSuccess) {
         toast({
           title: "All entries updated successfully",
           description:
-            "All entries are marked as paid and the ledger is updated successfully",
+            "Selected entries are marked as paid and the ledger is updated successfully",
           variant: "default",
         });
         await fetchData(currentPage);
@@ -233,26 +264,51 @@ const PaymentConfirmation = () => {
         <div className="flex justify-end mb-4">
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive">Mark All as Paid</Button>
+              <Button variant="destructive">Mark Payments</Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogTitle>Select Payment Action</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action cannot be undone. This will update all pending
-                  requests as paid and update the ledger of all associated
-                  users.
+                  Choose a user to mark their payments or mark all as paid.
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel asChild>
-                  <Button variant="ghost">Cancel</Button>
-                </AlertDialogCancel>
-                <AlertDialogAction asChild>
-                  <Button variant="destructive" onClick={handleMarkAllAsPaid}>
-                    Continue
-                  </Button>
+
+              <div className="flex flex-col gap-2">
+                {/* Mark All button */}
+                <AlertDialogAction
+                  onClick={() => handleMarkAllAsPaid("All")}
+                  className="bg-destructive hover:bg-destructive/90 text-white"
+                >
+                  Mark All as Paid
                 </AlertDialogAction>
+
+                {/* Divider */}
+                <div className="relative my-2">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      Or select individual user
+                    </span>
+                  </div>
+                </div>
+
+                {/* Room member buttons */}
+                {roomMembers.map((member) => (
+                  <AlertDialogAction
+                    key={member._id}
+                    onClick={() => handleMarkAllAsPaid(member.userId)}
+                    className="w-full"
+                  >
+                    Mark {member.userName}'s Payments
+                  </AlertDialogAction>
+                ))}
+              </div>
+
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
