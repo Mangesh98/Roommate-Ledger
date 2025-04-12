@@ -21,7 +21,7 @@ import {
   DropdownMenuRadioItem,
 } from "./ui/dropdown-menu";
 import { useState } from "react";
-import { AlignRight, LogOut, User } from "lucide-react";
+import { AlignRight, LogOut} from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "../store/store";
 import { cn } from "../lib/utils";

@@ -9,7 +9,7 @@ import { useToast } from "../ui/use-toast";
 import { createEntryAction } from "../../api/entry";
 import { Button } from "../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { CalendarIcon, Loader2, X } from "lucide-react";
+import { CalendarIcon, Loader2} from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Calendar } from "../ui/calendar";
 import { addDays, format } from "date-fns";
