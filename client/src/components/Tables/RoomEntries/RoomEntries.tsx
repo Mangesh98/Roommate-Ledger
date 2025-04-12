@@ -15,7 +15,10 @@ import {
   CircleDashed,
   HandCoins,
   Info,
+  Plus,
   Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 import {
@@ -69,6 +72,28 @@ import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover";
 import { format } from "date-fns";
 import { Calendar } from "../../ui/calendar";
 import { getRoomDetailsAction } from "../../../api/room";
+
+// const TableHeader: React.FC<{ children: React.ReactNode }> = ({
+//   children,
+//   ...props
+// }) => (
+//   <th
+//     scope="col"
+//     className="px-6 py-4 text-left font-medium text-gray-600 dark:text-gray-300"
+//     {...props}
+//   >
+//     {children}
+//   </th>
+// );
+
+// const TableCell: React.FC<{
+//   className?: string;
+//   children: React.ReactNode;
+// }> = ({ className, children, ...props }) => (
+//   <td className={cn("px-6 py-4 text-sm", className)} {...props}>
+//     {children}
+//   </td>
+// );
 
 const RoomEntries = () => {
   const [rows, setRows] = useState<EntryType[]>([]);
@@ -373,25 +398,29 @@ const RoomEntries = () => {
 
   return (
     <>
-      <div className="relative w-full overflow-auto">
-        <div className="inline-block mb-4">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-            Room Name: {currentUser?.roomName}
-          </h1>
+      <div className="container mx-auto px-4 py-8">
+        {/* Header Section */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              {currentUser?.roomName}
+            </h1>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
+              Manage room expenses and track payments
+            </p>
+          </div>
           <Link
             to="/new-entry"
-            className="inline-block mt-2 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-lg px-5 py-2.5 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700"
+            className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
-            Create New Entry
+            <Plus className="w-4 h-4 mr-2" />
+            New Entry
           </Link>
         </div>
-        <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-          Room Entries
-        </h2>
-        {/* Set Entries size */}
-        <div className="filters mb-4">
-          <div className="flex gap-4 items-center my-4">
-            {/* Page Size Dropdown */}
+
+        {/* Filters Section */}
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border p-4 mb-6">
+          <div className="flex flex-wrap gap-4 items-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="flex items-center">
@@ -414,11 +443,9 @@ const RoomEntries = () => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Date Range Picker */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button
-                  id="date"
                   variant="outline"
                   className={cn(
                     "w-[300px] justify-start text-left font-normal",
@@ -454,25 +481,25 @@ const RoomEntries = () => {
                 />
               </PopoverContent>
             </Popover>
-            {/* Filter Button */}
+
             <Button
               disabled={date == undefined}
               variant="secondary"
               onClick={() => fetchEntries(1)}
             >
-              Apply
+              Apply Filter
             </Button>
             <Button
               disabled={date == undefined}
-              variant="destructive"
+              variant="outline"
               onClick={() => fetchEntries(1, true)}
             >
               Reset
             </Button>
-            {/* Mark all as paid Button */}
+
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive">Mark Payments</Button>
+                <Button variant="default">Mark Payments</Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -483,15 +510,13 @@ const RoomEntries = () => {
                 </AlertDialogHeader>
 
                 <div className="flex flex-col gap-2">
-                  {/* Mark All button */}
                   <AlertDialogAction
                     onClick={() => handleMarkAsPaid("All")}
-                    className="bg-destructive hover:bg-destructive/90 text-white"
+                    className="bg-blue-500 hover:bg-blue-600 text-white"
                   >
                     Mark All as Paid
                   </AlertDialogAction>
 
-                  {/* Divider */}
                   <div className="relative my-2">
                     <div className="absolute inset-0 flex items-center">
                       <span className="w-full border-t" />
@@ -503,12 +528,11 @@ const RoomEntries = () => {
                     </div>
                   </div>
 
-                  {/* Room member buttons */}
                   {roomMembers.map((member) => (
                     <AlertDialogAction
                       key={member._id}
                       onClick={() => handleMarkAsPaid(member.userId)}
-                      className="w-full"
+                      className="w-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
                     >
                       Mark {member.userName}'s Payments
                     </AlertDialogAction>
@@ -521,75 +545,105 @@ const RoomEntries = () => {
               </AlertDialogContent>
             </AlertDialog>
           </div>
+        </div>
 
-          {/* Get Entries */}
-          <div className="flex space-x-4">
-            <table className="w-full table-auto min-w-max">
-              <thead className="text-sm font-medium text-gray-900 dark:text-white bg-gray-200 dark:bg-gray-800">
-                <tr className="border-b">
-                  <th scope="col" className="px-6 py-3 text-left">
+        {/* Get Entries */}
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border">
+          <div className="p-4 border-b">
+            <h2 className="text-xl font-semibold">Room Entries</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full table-auto">
+              <thead className="bg-gray-50 dark:bg-gray-800">
+                <tr>
+                  <th
+                    scope="col"
+                    className="px-6 py-4 text-left font-medium text-gray-600 dark:text-gray-300"
+                  >
                     Date
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left">
+                  <th
+                    scope="col"
+                    className="px-6 py-4 text-left font-medium text-gray-600 dark:text-gray-300"
+                  >
                     Name
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left">
-                    मकसद
+                  <th
+                    scope="col"
+                    className="px-6 py-4 text-left font-medium text-gray-600 dark:text-gray-300"
+                  >
+                    Description
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left">
+                  <th
+                    scope="col"
+                    className="px-6 py-4 text-left font-medium text-gray-600 dark:text-gray-300"
+                  >
                     Amount
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left">
+                  <th
+                    scope="col"
+                    className="px-6 py-4 text-left font-medium text-gray-600 dark:text-gray-300"
+                  >
                     Status
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left">
+                  <th
+                    scope="col"
+                    className="px-6 py-4 text-left font-medium text-gray-600 dark:text-gray-300"
+                  >
                     Delete
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left">
+                  <th
+                    scope="col"
+                    className="px-6 py-4 text-left font-medium text-gray-600 dark:text-gray-300"
+                  >
                     Info
                   </th>
                 </tr>
               </thead>
-
-              <tbody className="text-sm text-gray-900 dark:text-white divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {rows.length === 0 ? (
-                  <tr className="border-b transition-colors hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <td colSpan={7} className="px-6 py-4 text-center">
-                      No data available
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="px-6 py-8 text-center text-gray-500"
+                    >
+                      No transactions found
                     </td>
                   </tr>
                 ) : (
                   rows.map((row) => (
                     <tr
                       key={row._id}
-                      className="border-b transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                     >
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {formatDate(new Date(row.date))}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 text-sm">
                         {row.members.find(
                           (member) => member.userId === row.paidBy
                         )?.userName || "Unknown"}
                       </td>
-                      <td className="px-6 py-4">{row.description}</td>
-                      <td className="px-6 py-4">&#8377;{row.amount}</td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 text-sm">{row.description}</td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                        ₹{row.amount.toLocaleString("en-IN")}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
                         {(() => {
                           const currentUserMember = row.members.find(
                             (member) => member.userId === currentUser.userId
                           );
                           if (currentUserMember?.isPending) {
                             return (
-                              <div className="flex items-center">
-                                <CircleDashed className="w-3.5 h-3.5 me-1 text-red-500 dark:text-red-500 flex-shrink-0" />
+                              <div className="flex items-center text-yellow-500 dark:text-yellow-400">
+                                <CircleDashed className="w-4 h-4 mr-2" />
                                 <span>Pending</span>
                               </div>
                             );
                           } else if (currentUserMember?.paidStatus) {
                             return (
-                              <div className="flex items-center">
-                                <CircleCheck className="w-3.5 h-3.5 me-1 text-green-500 dark:text-green-400 flex-shrink-0" />
+                              <div className="flex items-center text-green-500 dark:text-green-400">
+                                <CircleCheck className="w-4 h-4 mr-2" />
                                 <span>Paid</span>
                               </div>
                             );
@@ -598,138 +652,86 @@ const RoomEntries = () => {
                             !currentUserMember.paidStatus
                           ) {
                             return (
-                              <AlertDialog>
-                                <AlertDialogTrigger
-                                  asChild
-                                  className="p-2 text-left flex items-center max-w-10 cursor-pointer"
-                                >
-                                  <div className="cursor-pointer hover:text-green-400">
-                                    <span className="text-sm">
-                                      Pay
-                                      <label className="ml-1">
-                                        &#8377;
-                                        {Math.round(
-                                          row.amount / row.members.length
-                                        )}
-                                      </label>
-                                    </span>
-                                    <HandCoins className="w-3.5 h-3.5 ml-1 flex-shrink-0" />
-                                  </div>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>
-                                      Are you absolutely sure?
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      This action cannot be undone. This will
-                                      update the record as paid and update the
-                                      ledger of all associated users.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>
-                                      Cancel
-                                    </AlertDialogCancel>
-                                    <AlertDialogAction
-                                      className="bg-green-500 text-black hover:bg-green-600"
-                                      onClick={() => handleUpdateEntry(row)}
-                                    >
-                                      Continue
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
+                              <button
+                                onClick={() => handleUpdateEntry(row)}
+                                className="inline-flex items-center px-3 py-1 rounded-md text-sm
+                          bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 
+                          dark:text-blue-400 dark:hover:bg-blue-900/50 transition-colors"
+                              >
+                                <HandCoins className="w-4 h-4 mr-1" />
+                                Pay ₹
+                                {Math.round(
+                                  row.amount / row.members.length
+                                ).toLocaleString("en-IN")}
+                              </button>
                             );
-                          } else {
-                            return null;
                           }
                         })()}
                       </td>
-
                       <td className="px-6 py-4">
                         {row.paidBy === currentUser.userId &&
                           row.members.filter(
-                            (member) => member.paidStatus === true
-                          ).length === 1 && (
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  className="p-2 text-left flex items-center"
-                                >
-                                  <Trash2 className="block h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    Are you absolutely sure?
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This action cannot be undone. This will
-                                    delete the record from the server.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                    onClick={() => handleDeleteClick(row._id)}
-                                  >
-                                    Continue
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                            (member) =>
+                              member.paidStatus &&
+                              member.userId !== currentUser.userId
+                          ).length === 0 && (
+                            <button
+                              onClick={() => handleDeleteClick(row._id)}
+                              className="inline-flex items-center p-2 text-red-600 hover:text-red-800 
+                      dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           )}
                       </td>
                       <td className="px-6 py-4">
-                        <Dialog aria-labelledby="dialog-title">
-                          <DialogTrigger asChild className="cursor-pointer">
-                            <Info />
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <button
+                              className="inline-flex items-center px-3 py-1 rounded-md text-sm
+                      bg-gray-50 text-gray-700 hover:bg-gray-100 dark:bg-gray-800 
+                      dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+                            >
+                              <Info className="w-4 h-4 mr-1" />
+                              View Split
+                            </button>
                           </DialogTrigger>
-                          <DialogContent aria-describedby={row.description}>
+                          <DialogContent className="sm:max-w-md">
                             <DialogHeader>
-                              <DialogTitle>Members</DialogTitle>
-                              <div id="dialog-description">
-                                <ul className="mt-2 max-w-md space-y-1 text-gray-500 dark:text-gray-400 grid grid-cols-2 gap-2">
-                                  {row.members.map((member, idx) => (
-                                    <li key={idx} className="flex items-center">
-                                      {member.paidStatus ? (
-                                        <CircleCheck className="w-3.5 h-3.5 me-1 text-green-500 dark:text-green-400 flex-shrink-0" />
-                                      ) : (
-                                        <Circle className="w-3.5 h-3.5 me-2 flex-shrink-0" />
-                                      )}
-                                      <div>
-                                        <span>{member.userName}</span>
-                                        <span className="ml-2">
-                                          &#8377;
-                                          {Math.round(
-                                            row.amount / row.members.length
-                                          )}
-                                        </span>
-                                      </div>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
+                              <DialogTitle className="flex items-center space-x-2">
+                                <span>Split Details</span>
+                                <span className="text-sm font-normal text-gray-500">
+                                  (₹{row.amount.toLocaleString("en-IN")})
+                                </span>
+                              </DialogTitle>
                             </DialogHeader>
-                            <DialogDescription>
-                              <label className="mt-1 block">
-                                Total Amount : &#8377; {row.amount}
-                              </label>
-                              <label className="mt-1 block">
-                                Created At :
-                                <span
-                                  style={{ marginLeft: "8px" }}
-                                >{`${new Date(row.createdAt)
-                                  .toLocaleDateString("en-GB")
-                                  .replace(/\//g, "-")} ${new Date(
-                                  row.createdAt
-                                ).toLocaleTimeString()}`}</span>
-                              </label>
-                            </DialogDescription>
+                            <div className="grid grid-cols-2 gap-4 py-4">
+                              {row.members.map((member, idx) => (
+                                <div
+                                  key={idx}
+                                  className={`flex items-center justify-between p-3 rounded-lg ${
+                                    member.paidStatus
+                                      ? "bg-green-50 dark:bg-green-900/20"
+                                      : "bg-gray-50 dark:bg-gray-800"
+                                  }`}
+                                >
+                                  <div className="flex items-center space-x-2">
+                                    {member.paidStatus ? (
+                                      <CircleCheck className="w-4 h-4 text-green-500" />
+                                    ) : (
+                                      <Circle className="w-4 h-4 text-gray-400" />
+                                    )}
+                                    <span>{member.userName}</span>
+                                  </div>
+                                  <span className="font-medium">
+                                    ₹
+                                    {Math.round(
+                                      row.amount / row.members.length
+                                    ).toLocaleString("en-IN")}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
                           </DialogContent>
                         </Dialog>
                       </td>
@@ -737,31 +739,28 @@ const RoomEntries = () => {
                   ))
                 )}
               </tbody>
-
-              <tfoot className="bg-gray-200 dark:bg-gray-800">
+              <tfoot className="bg-gray-50 dark:bg-gray-800 font-semibold">
                 <tr>
-                  <th scope="row" className="px-6 py-3 text-base text-left">
-                    Total
-                  </th>
-                  <td className="px-6 py-3"></td>
-                  <td className="px-6 py-3"></td>
-                  <td className="px-6 py-3">
-                    &#8377;{rows.reduce((sum, row) => sum + row.amount, 0)}
+                  <td className="px-6 py-4">Total</td>
+                  <td colSpan={2}></td>
+                  <td className="px-6 py-4">
+                    ₹
+                    {rows
+                      .reduce((sum, row) => sum + row.amount, 0)
+                      .toLocaleString("en-IN")}
                   </td>
-                  <td className="px-6 py-3"></td>
-                  <td className="px-6 py-3"></td>
-                  <td className="px-6 py-3"></td>
+                  <td colSpan={3}></td>
                 </tr>
               </tfoot>
             </table>
           </div>
         </div>
 
-        <div className="w-full flex justify-center mt-4">
+        <div className="w-full mt-4">
           <Pagination>
-            <PaginationContent className="flex items-center space-x-2">
+            <PaginationContent className="flex flex-wrap items-center justify-center gap-2">
               {/* Previous Button */}
-              <PaginationItem>
+              <PaginationItem className="hidden sm:block">
                 <PaginationPrevious
                   href="#"
                   onClick={(e) => {
@@ -774,70 +773,95 @@ const RoomEntries = () => {
                 />
               </PaginationItem>
 
-              {/* Optionally display first page and ellipsis if needed */}
-              {getPaginationPages(currentPage, totalPages)[0] > 1 && (
-                <>
-                  <PaginationItem>
+              {/* Mobile Previous Button */}
+              <PaginationItem className="sm:hidden">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    if (currentPage > 1) handlePaginationClick(currentPage - 1);
+                  }}
+                  disabled={currentPage === 1}
+                  className="h-8 w-8"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+              </PaginationItem>
+
+              {/* Simplified Mobile View */}
+              <div className="flex items-center gap-1 sm:hidden">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Page {currentPage} of {totalPages}
+                </span>
+              </div>
+
+              {/* Desktop Pagination */}
+              <div className="hidden sm:flex items-center gap-1">
+                {/* First page when not in range */}
+                {getPaginationPages(currentPage, totalPages)[0] > 1 && (
+                  <>
+                    <PaginationItem>
+                      <PaginationLink
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handlePaginationClick(1);
+                        }}
+                      >
+                        1
+                      </PaginationLink>
+                    </PaginationItem>
+                    {getPaginationPages(currentPage, totalPages)[0] > 2 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+                  </>
+                )}
+
+                {/* Page numbers */}
+                {getPaginationPages(currentPage, totalPages).map((page) => (
+                  <PaginationItem key={page}>
                     <PaginationLink
                       href="#"
                       onClick={(e) => {
                         e.preventDefault();
-                        handlePaginationClick(1);
+                        handlePaginationClick(page);
                       }}
+                      isActive={currentPage === page}
                     >
-                      1
+                      {page}
                     </PaginationLink>
                   </PaginationItem>
-                  {getPaginationPages(currentPage, totalPages)[0] > 2 && (
+                ))}
+
+                {/* Last page when not in range */}
+                {getPaginationPages(currentPage, totalPages).slice(-1)[0] <
+                  totalPages && (
+                  <>
+                    {getPaginationPages(currentPage, totalPages).slice(-1)[0] <
+                      totalPages - 1 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
                     <PaginationItem>
-                      <PaginationEllipsis />
+                      <PaginationLink
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handlePaginationClick(totalPages);
+                        }}
+                      >
+                        {totalPages}
+                      </PaginationLink>
                     </PaginationItem>
-                  )}
-                </>
-              )}
+                  </>
+                )}
+              </div>
 
-              {/* Display the window of pages */}
-              {getPaginationPages(currentPage, totalPages).map((page) => (
-                <PaginationItem key={page}>
-                  <PaginationLink
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePaginationClick(page);
-                    }}
-                    isActive={currentPage === page}
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-
-              {/* Optionally display ellipsis and last page if needed */}
-              {getPaginationPages(currentPage, totalPages).slice(-1)[0] <
-                totalPages && (
-                <>
-                  {getPaginationPages(currentPage, totalPages).slice(-1)[0] <
-                    totalPages - 1 && (
-                    <PaginationItem>
-                      <PaginationEllipsis />
-                    </PaginationItem>
-                  )}
-                  <PaginationItem>
-                    <PaginationLink
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePaginationClick(totalPages);
-                      }}
-                    >
-                      {totalPages}
-                    </PaginationLink>
-                  </PaginationItem>
-                </>
-              )}
-
-              {/* Next Button */}
-              <PaginationItem>
+              {/* Next Button Desktop */}
+              <PaginationItem className="hidden sm:block">
                 <PaginationNext
                   href="#"
                   onClick={(e) => {
@@ -851,6 +875,22 @@ const RoomEntries = () => {
                       : ""
                   }
                 />
+              </PaginationItem>
+
+              {/* Mobile Next Button */}
+              <PaginationItem className="sm:hidden">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    if (currentPage < totalPages)
+                      handlePaginationClick(currentPage + 1);
+                  }}
+                  disabled={currentPage === totalPages}
+                  className="h-8 w-8"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </PaginationItem>
             </PaginationContent>
           </Pagination>

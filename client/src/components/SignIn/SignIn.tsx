@@ -63,121 +63,119 @@ const SignIn = () => {
 			setIsSubmitting(false);
 		}
 	};
+	
 	return (
-		<>
-			<section className="">
-				<div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
-					<div className="w-full rounded-lg shadow md:border md:mt-0 sm:max-w-lg xl:p-0 ">
-						<div className="p-6 space-y-4 md:space-y-6 sm:p-8">
-							<h1 className="text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
-								Welcome back to Roommate Ledger
-							</h1>
-							<p className="mb-4">Sign In to start your roommate ledger</p>
-						</div>
-
-						<Form {...form}>
-							<form
-								onSubmit={form.handleSubmit(onSubmit)}
-								className="space-y-4 md:space-y-6 p-6"
-							>
-								<FormField
-									control={form.control}
-									name="email"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Email</FormLabel>
-											<FormControl>
-												<Input
-													type="email"
-													placeholder="email123@email.com"
-													{...field}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={form.control}
-									name="password"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Password</FormLabel>
-											<FormControl>
-												<Input
-													placeholder="Password"
-													type="password"
-													{...field}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-								<Button type="submit" disabled={isSubmitting}>
-									{isSubmitting ? (
-										<>
-											<Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please
-											wait
-										</>
-									) : (
-										"Sign In"
-									)}
-								</Button>
-							</form>
-						</Form>
-						<div className="text-center mt-4 mb-4">
-							<p>
-								<span>Don't have an account?</span>
-								<Link
-									to="/sign-up"
-									className="text-blue-600 hover:text-blue-800 ml-2"
-								>
-									Sign Up
-								</Link>
-							</p>
-						</div>
-					</div>
-				</div>
-			</section>
-		</>
-	);
-};
-export default SignIn;
-
-{
-	/* <FormField
-	control={form.control}
-	name="date"
-	render={({ field }) => (
-		<FormItem>
-			<FormLabel>Date</FormLabel>
-			<FormControl>
-				<Popover>
-					<PopoverTrigger asChild>
-						<Button
-							variant={"outline"}
-							className={cn(
-								"w-[280px] justify-start text-left font-normal",
-								!date && "text-muted-foreground"
-							)}
-						>
-							<CalendarIcon className="mr-2 h-4 w-4" />
-							{date ? format(date, "PPP") : <span>Pick a date</span>}
-						</Button>
-					</PopoverTrigger>
-					<PopoverContent className="w-auto p-0">
-						<Calendar
-							mode="single"
-							onSelect={setDate}
-							initialFocus
+		<div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 sm:px-6 lg:px-8">
+		  <div className="sm:mx-auto sm:w-full sm:max-w-md">
+			<div className="text-center">
+			  <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+				Welcome back
+			  </h1>
+			  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+				Sign in to your Roommate Ledger account
+			  </p>
+			</div>
+		  </div>
+	
+		  <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+			<div className="bg-white dark:bg-gray-800 py-8 px-4 shadow-lg rounded-lg sm:px-10">
+			  <Form {...form}>
+				<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+				  <FormField
+					control={form.control}
+					name="email"
+					render={({ field }) => (
+					  <FormItem>
+						<FormLabel className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+						  Email address
+						</FormLabel>
+						<FormControl>
+						  <Input
+							type="email"
+							placeholder="you@example.com"
+							className="mt-1 block w-full rounded-md border-gray-300 shadow-sm
+							  focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 
+							  dark:bg-gray-700 dark:text-white sm:text-sm"
 							{...field}
-						/>
-					</PopoverContent>
-				</Popover>
-			</FormControl>
-			<FormMessage />
-		</FormItem>
-	)}
-/>; */
-}
+						  />
+						</FormControl>
+						<FormMessage className="mt-2 text-sm text-red-600 dark:text-red-400" />
+					  </FormItem>
+					)}
+				  />
+	
+				  <FormField
+					control={form.control}
+					name="password"
+					render={({ field }) => (
+					  <FormItem>
+						<FormLabel className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+						  Password
+						</FormLabel>
+						<FormControl>
+						  <Input
+							type="password"
+							placeholder="••••••••"
+							className="mt-1 block w-full rounded-md border-gray-300 shadow-sm
+							  focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 
+							  dark:bg-gray-700 dark:text-white sm:text-sm"
+							{...field}
+						  />
+						</FormControl>
+						<FormMessage className="mt-2 text-sm text-red-600 dark:text-red-400" />
+					  </FormItem>
+					)}
+				  />
+	
+				  <div>
+					<Button
+					  type="submit"
+					  disabled={isSubmitting}
+					  className="w-full flex justify-center py-2 px-4 border border-transparent 
+						rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 
+						hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 
+						focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed
+						dark:bg-blue-600 dark:hover:bg-blue-700"
+					>
+					  {isSubmitting ? (
+						<div className="flex items-center">
+						  <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
+						  Signing in...
+						</div>
+					  ) : (
+						"Sign in"
+					  )}
+					</Button>
+				  </div>
+				</form>
+			  </Form>
+	
+			  <div className="mt-6">
+				<div className="relative">
+				  <div className="absolute inset-0 flex items-center">
+					<div className="w-full border-t border-gray-300 dark:border-gray-600" />
+				  </div>
+				  <div className="relative flex justify-center text-sm">
+					<span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+					  New to Roommate Ledger?
+					</span>
+				  </div>
+				</div>
+	
+				<div className="mt-6 text-center">
+				  <Link
+					to="/sign-up"
+					className="text-sm font-medium text-blue-600 hover:text-blue-500 
+					  dark:text-blue-400 dark:hover:text-blue-300"
+				  >
+					Create an account →
+				  </Link>
+				</div>
+			  </div>
+			</div>
+		  </div>
+		</div>
+	  );
+	};
+	
+	export default SignIn;
