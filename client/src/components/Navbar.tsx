@@ -1,186 +1,166 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "./ui/alert-dialog";
-import { useCookies } from "react-cookie";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-	DropdownMenuRadioGroup,
-	DropdownMenuRadioItem,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "./ui/dropdown-menu";
 import { useState } from "react";
-import { AlignRight } from "lucide-react";
+import { AlignRight, LogOut, User } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "../store/store";
+import { cn } from "../lib/utils";
+import { useCookies } from "react-cookie";
+
+const NavItem: React.FC<{ to: string; children: React.ReactNode }> = ({ to, children }) => (
+  <NavLink
+    to={to}
+    className={({ isActive }) =>
+      cn(
+        "relative px-3 py-2 transition-colors hover:text-blue-600 dark:hover:text-blue-400",
+        isActive && "text-blue-600 dark:text-blue-400 font-medium"
+      )
+    }
+  >
+    {({ isActive }) => (
+      <>
+        {children}
+        {isActive && (
+          <span className="absolute inset-x-1 -bottom-px h-px bg-gradient-to-r from-blue-500/0 via-blue-500/40 to-blue-500/0 dark:from-blue-400/0 dark:via-blue-400/40 dark:to-blue-400/0" />
+        )}
+      </>
+    )}
+  </NavLink>
+);
 
 const Navbar = () => {
-	const currentUser = useSelector((state: RootState) => state.currentUser);
+  const currentUser = useSelector((state: RootState) => state.currentUser);
+  const navigate = useNavigate();
+  const [, setCookie] = useCookies();
+  const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
 
-	const navigate = useNavigate();
-	const [, setCookie] = useCookies();
-	const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
+  const handlePageChange = (page: string) => {
+    navigate(`/${page.toLowerCase().replace(" ", "-")}`);
+  };
 
-	const handlePageChange = (page: string) => {
-		navigate(`/${page.toLowerCase().replace(" ", "-")}`);
-	};
+  const logout = async () => {
+    setCookie("token", "", { path: "/" });
+  };
 
-	const logout = async () => {
-		setCookie("token", "", { path: "/" });
-	};
+  return (
+    <nav className="sticky top-0 z-50 w-full border-b bg-white/75 backdrop-blur-sm dark:bg-gray-900/75 dark:border-gray-800">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-3">
+            <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+              Roommate Ledger
+            </span>
+          </Link>
 
-	return (
-		<nav className="bg-white border-gray-200 dark:bg-gray-900">
-			<div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
-				<Link
-					to="/"
-					className="flex items-center space-x-3 rtl:space-x-reverse"
-				>
-					<span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">
-						Roommate Ledger
-					</span>
-				</Link>
-				<div className="flex items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
-					<DropdownMenu>
-						<DropdownMenuTrigger>
-							<Avatar>
-								<AvatarImage src="https://github.com/shadcn.png" />
-								<AvatarFallback>Profile</AvatarFallback>
-							</Avatar>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent>
-							<DropdownMenuLabel>My Account</DropdownMenuLabel>
-							<DropdownMenuSeparator />
-							<DropdownMenuLabel>
-								<span className="block text-sm text-gray-900 dark:text-white">
-									{currentUser.userName}
-								</span>
-								<span className="block text-sm  text-gray-500 truncate dark:text-gray-400">
-									{currentUser.email}
-								</span>
-							</DropdownMenuLabel>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem>
-								<button
-									className="w-full text-left"
-									onClick={() => setIsAlertDialogOpen(true)}
-								>
-									Logout
-								</button>
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
-					<div className="block md:hidden">
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<AlignRight className="cursor-pointer" />
-							</DropdownMenuTrigger>
-							<DropdownMenuContent className="w-56">
-								<DropdownMenuLabel>Menu</DropdownMenuLabel>
-								<DropdownMenuSeparator />
-								<DropdownMenuRadioGroup onValueChange={handlePageChange}>
-									<DropdownMenuRadioItem value="Room Entries">
-										Room Entries
-									</DropdownMenuRadioItem>
-									<DropdownMenuRadioItem value="My Entries">
-										My Entries
-									</DropdownMenuRadioItem>
-									<DropdownMenuRadioItem value="Ledger">
-										Ledger
-									</DropdownMenuRadioItem>
-									<DropdownMenuRadioItem value="Payment Confirmation">
-										Payment Confirmation
-									</DropdownMenuRadioItem>
-								</DropdownMenuRadioGroup>
-							</DropdownMenuContent>
-						</DropdownMenu>
-					</div>
-				</div>
-				<div
-					className="items-center justify-between hidden w-full md:flex md:w-auto md:order-1"
-					id="navbar-user"
-				>
-					<ul className="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
-						<li>
-							<NavLink
-								to="/room-entries"
-								className="block py-2 px-3 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 md:dark:hover:bg-transparent dark:border-gray-700"
-								style={({ isActive }) => ({
-									color: isActive ? "#1d4ed8" : "white",
-								})}
-							>
-								Room Entries
-							</NavLink>
-						</li>
-						<li>
-							<NavLink
-								to="/my-entries"
-								className="block py-2 px-3 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 md:dark:hover:bg-transparent dark:border-gray-700"
-								style={({ isActive }) => ({
-									color: isActive ? "#1d4ed8" : "white",
-								})}
-							>
-								My Entries
-							</NavLink>
-						</li>
-						<li>
-							<NavLink
-								to="/ledger"
-								className="block py-2 px-3 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 md:dark:hover:bg-transparent dark:border-gray-700"
-								style={({ isActive }) => ({
-									color: isActive ? "#1d4ed8" : "white",
-								})}
-							>
-								Ledger
-							</NavLink>
-						</li>
-						<li>
-							<NavLink
-								to="/payment-confirmation"
-								className="block py-2 px-3 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 md:dark:hover:bg-transparent dark:border-gray-700"
-								style={({ isActive }) => ({
-									color: isActive ? "#1d4ed8" : "white",
-								})}
-							>
-								Payment Confirmation
-							</NavLink>
-						</li>
-					</ul>
-				</div>
-			</div>
-			{/* The AlertDialog for logout */}
-			<AlertDialog open={isAlertDialogOpen} onOpenChange={setIsAlertDialogOpen}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>
-							Are you sure you want to logout?
-						</AlertDialogTitle>
-						<AlertDialogDescription>
-							You will be logged out and redirected to the login page.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel onClick={() => setIsAlertDialogOpen(false)}>
-							Cancel
-						</AlertDialogCancel>
-						<AlertDialogAction onClick={logout}>Continue</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
-		</nav>
-	);
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex md:items-center md:space-x-6">
+            <NavItem to="/room-entries">Room Entries</NavItem>
+            <NavItem to="/my-entries">My Entries</NavItem>
+            <NavItem to="/ledger">Ledger</NavItem>
+            <NavItem to="/payment-confirmation">Payment Confirmation</NavItem>
+          </div>
+
+          {/* User Menu & Mobile Menu */}
+          <div className="flex items-center space-x-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger className="focus:outline-none">
+                <Avatar className="h-8 w-8 transition-transform hover:scale-105">
+                  <AvatarImage src="https://github.com/shadcn.png" />
+                  <AvatarFallback className="bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400">
+                    {currentUser.userName?.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium">{currentUser.userName}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {currentUser.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setIsAlertDialogOpen(true)}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Mobile Menu Button */}
+            <div className="md:hidden">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
+                    <AlignRight className="h-6 w-6" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuRadioGroup onValueChange={handlePageChange}>
+                    <DropdownMenuRadioItem value="Room Entries">
+                      Room Entries
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="My Entries">
+                      My Entries
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="Ledger">
+                      Ledger
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="Payment Confirmation">
+                      Payment Confirmation
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Logout Dialog */}
+      <AlertDialog open={isAlertDialogOpen} onOpenChange={setIsAlertDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Log out of Roommate Ledger?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You'll need to sign in again to access your account.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={logout}
+              className="bg-red-600 text-white hover:bg-red-700 dark:hover:bg-red-700 cursor-pointer"
+            >
+              Log out
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </nav>
+  );
 };
 
 export default Navbar;
