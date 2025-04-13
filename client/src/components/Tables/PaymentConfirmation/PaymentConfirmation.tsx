@@ -316,7 +316,7 @@ const PaymentConfirmation = () => {
                 <AlertDialogAction
                   key={member._id}
                   onClick={() => handleMarkAllAsPaid(member.userId)}
-                  className="w-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+                  className="w-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-white"
                 >
                   Mark {member.userName}'s Payments
                 </AlertDialogAction>

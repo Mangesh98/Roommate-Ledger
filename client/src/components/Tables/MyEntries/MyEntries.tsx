@@ -33,6 +33,8 @@ import {
 } from "lucide-react";
 import { Skeleton } from "../../ui/skeleton";
 import { Button } from "../../ui/button";
+import { useBreakpoint } from "../../../hooks/useBreakpoint";
+import { MobileView } from "./MobileView";
 
 const MyEntries = () => {
   const pageLimit = 10;
@@ -42,6 +44,7 @@ const MyEntries = () => {
   const [cookies] = useCookies();
   const token = cookies.token;
   const [loading, setLoading] = useState<boolean>(true);
+  const { isMobile } = useBreakpoint();
 
   const fetchData = async (page: number) => {
     setLoading(true);
@@ -91,210 +94,240 @@ const MyEntries = () => {
     return pages;
   };
 
-  if (loading) {
-    return (
-      <>
-        <div className="relative w-full overflow-auto">
-          <h2 className="mb-2">My Entries</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full table-auto min-w-max">
-              <thead className="text-sm font-medium text-gray-900 dark:text-white bg-gray-200 dark:bg-gray-800">
-                <tr className="border-b">
-                  {["Date", "मकसद", "Amount", "Info"].map((_header, index) => (
-                    <th key={index} scope="col" className="px-6 py-3 text-left">
+  return (
+    <div className="container mx-auto px-4 py-8">
+      {/* Header Section */}
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            My Transactions
+          </h1>
+          <p className="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
+            View your personal transaction history
+          </p>
+        </div>
+      </div>
+
+      {/* Content Section */}
+      <div className="rounded-lg border shadow-sm bg-white dark:bg-gray-900">
+        {loading ? (
+          <div className="relative w-full overflow-auto">
+            <h2 className="mb-2">My Entries</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full table-auto min-w-max">
+                <thead className="text-sm font-medium text-gray-900 dark:text-white bg-gray-200 dark:bg-gray-800">
+                  <tr className="border-b">
+                    {["Date", "मकसद", "Amount", "Info"].map(
+                      (_header, index) => (
+                        <th
+                          key={index}
+                          scope="col"
+                          className="px-6 py-3 text-left"
+                        >
+                          <Skeleton className="h-4 w-full" />
+                        </th>
+                      )
+                    )}
+                  </tr>
+                </thead>
+
+                <tbody className="text-sm text-gray-900 dark:text-white divide-y divide-gray-200 dark:divide-gray-700">
+                  {Array.from({ length: 5 }).map((_, rowIndex) => (
+                    <tr
+                      key={rowIndex}
+                      className="border-b transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      {Array.from({ length: 4 }).map((_, colIndex) => (
+                        <td key={colIndex} className="px-6 py-4">
+                          <Skeleton className="h-4 w-full" />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+
+                <tfoot className="bg-gray-200 dark:bg-gray-800">
+                  <tr>
+                    <th scope="row" className="px-6 py-3 text-base text-left">
                       <Skeleton className="h-4 w-full" />
                     </th>
-                  ))}
-                </tr>
-              </thead>
-
-              <tbody className="text-sm text-gray-900 dark:text-white divide-y divide-gray-200 dark:divide-gray-700">
-                {Array.from({ length: 5 }).map((_, rowIndex) => (
-                  <tr
-                    key={rowIndex}
-                    className="border-b transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
-                  >
-                    {Array.from({ length: 4 }).map((_, colIndex) => (
-                      <td key={colIndex} className="px-6 py-4">
+                    {Array.from({ length: 3 }).map((_, colIndex) => (
+                      <td key={colIndex} className="px-6 py-3">
                         <Skeleton className="h-4 w-full" />
                       </td>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-
-              <tfoot className="bg-gray-200 dark:bg-gray-800">
+                </tfoot>
+              </table>
+            </div>
+            {/* Pagination controls */}
+            <div className="pagination mt-2 flex space-x-2">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Skeleton key={index} className="h-8 w-8" />
+              ))}
+            </div>
+          </div>
+        ) : isMobile ? (
+          <MobileView rows={rows} />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full table-auto">
+              <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
-                  <th scope="row" className="px-6 py-3 text-base text-left">
-                    <Skeleton className="h-4 w-full" />
+                  <th
+                    scope="col"
+                    className="px-6 py-4 text-left font-medium text-gray-600 dark:text-gray-300"
+                  >
+                    Date
                   </th>
-                  {Array.from({ length: 3 }).map((_, colIndex) => (
-                    <td key={colIndex} className="px-6 py-3">
-                      <Skeleton className="h-4 w-full" />
+                  <th
+                    scope="col"
+                    className="px-6 py-4 text-left font-medium text-gray-600 dark:text-gray-300"
+                  >
+                    Description
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-4 text-left font-medium text-gray-600 dark:text-gray-300"
+                  >
+                    Amount
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-4 text-left font-medium text-gray-600 dark:text-gray-300"
+                  >
+                    Details
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                {rows.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="px-6 py-8 text-center text-gray-500 dark:text-gray-400"
+                    >
+                      No transactions found
                     </td>
-                  ))}
+                  </tr>
+                ) : (
+                  rows.map((row) => (
+                    <tr
+                      key={row._id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        {formatDate(new Date(row.date))}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                        {row.description}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                        ₹{row.amount.toLocaleString("en-IN")}
+                      </td>
+                      <td className="px-6 py-4">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <button
+                              className="inline-flex items-center px-3 py-1.5 rounded-md text-sm
+                            bg-gray-50 text-gray-700 hover:bg-gray-100 
+                            dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 
+                            transition-colors"
+                            >
+                              <Info className="w-4 h-4 mr-1.5" />
+                              View Split
+                            </button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                              <DialogTitle className="flex items-center space-x-2">
+                                <span>Split Details</span>
+                                <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                                  (₹{row.amount.toLocaleString("en-IN")})
+                                </span>
+                              </DialogTitle>
+                            </DialogHeader>
+                            <div className="grid gap-2 py-4">
+                              {row.members.map((member, idx) => (
+                                <div
+                                  key={idx}
+                                  className={`flex items-center justify-between p-3 rounded-lg ${
+                                    member.paidStatus
+                                      ? "bg-green-50 dark:bg-green-900/20"
+                                      : "bg-gray-50 dark:bg-gray-800"
+                                  }`}
+                                >
+                                  <div className="flex items-center space-x-2">
+                                    {member.paidStatus ? (
+                                      <CircleCheck className="w-4 h-4 text-green-500" />
+                                    ) : (
+                                      <Circle className="w-4 h-4 text-gray-400" />
+                                    )}
+                                    <span className="text-gray-900 dark:text-gray-100">
+                                      {member.userName}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                                      ₹
+                                      {Math.round(
+                                        row.amount / row.members.length
+                                      ).toLocaleString("en-IN")}
+                                    </span>
+                                    <span
+                                      className={`px-2 py-0.5 rounded-full text-xs ${
+                                        member.paidStatus
+                                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                          : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                                      }`}
+                                    >
+                                      {member.paidStatus ? "Paid" : "Unpaid"}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <DialogDescription className="text-sm text-gray-500 dark:text-gray-400 pt-2 border-t dark:border-gray-700">
+                              Created on{" "}
+                              {new Date(row.createdAt).toLocaleDateString(
+                                "en-GB",
+                                {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
+                              )}
+                            </DialogDescription>
+                          </DialogContent>
+                        </Dialog>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+              <tfoot className="bg-gray-50 dark:bg-gray-800 font-semibold">
+                <tr>
+                  <td className="px-6 py-4 text-gray-900 dark:text-white">
+                    Total
+                  </td>
+                  <td></td>
+                  <td className="px-6 py-4 text-gray-900 dark:text-white">
+                    ₹
+                    {rows
+                      .reduce((sum, row) => sum + row.amount, 0)
+                      .toLocaleString("en-IN")}
+                  </td>
+                  <td></td>
                 </tr>
               </tfoot>
             </table>
           </div>
-          {/* Pagination controls */}
-          <div className="pagination mt-2 flex space-x-2">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <Skeleton key={index} className="h-8 w-8" />
-            ))}
-          </div>
-        </div>
-      </>
-    );
-  }
+        )}
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="rounded-lg border shadow-sm bg-white dark:bg-gray-900">
-        <div className="p-4 border-b">
-          <h2 className="text-xl font-semibold">My Transactions</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            View your personal transaction history
-          </p>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full table-auto">
-            <thead className="bg-gray-50 dark:bg-gray-800">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-6 py-4 text-left font-medium text-gray-600 dark:text-gray-300"
-                >
-                  Date
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-4 text-left font-medium text-gray-600 dark:text-gray-300"
-                >
-                  Description
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-4 text-left font-medium text-gray-600 dark:text-gray-300"
-                >
-                  Amount
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-4 text-left font-medium text-gray-600 dark:text-gray-300"
-                >
-                  Details
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {rows.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-6 py-8 text-center text-gray-500"
-                  >
-                    No transactions found
-                  </td>
-                </tr>
-              ) : (
-                rows.map((row) => (
-                  <tr
-                    key={row._id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {formatDate(new Date(row.date))}
-                    </td>
-                    <td className="px-6 py-4 text-sm">{row.description}</td>
-                    <td className="px-6 py-4 text-sm font-medium">
-                      ₹{row.amount.toLocaleString("en-IN")}
-                    </td>
-                    <td className="px-6 py-4">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <button
-                            className="inline-flex items-center px-3 py-1 rounded-md text-sm
-								bg-gray-50 text-gray-700 hover:bg-gray-100 dark:bg-gray-800 
-								dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
-                          >
-                            <Info className="w-4 h-4 mr-1" />
-                            View Split
-                          </button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-md">
-                          <DialogHeader>
-                            <DialogTitle className="flex items-center space-x-2">
-                              <span>Split Details</span>
-                              <span className="text-sm font-normal text-gray-500">
-                                (₹{row.amount.toLocaleString("en-IN")})
-                              </span>
-                            </DialogTitle>
-                          </DialogHeader>
-                          <div className="grid grid-cols-2 gap-4 py-4">
-                            {row.members.map((member, idx) => (
-                              <div
-                                key={idx}
-                                className={`flex items-center justify-between p-3 rounded-lg ${
-                                  member.paidStatus
-                                    ? "bg-green-50 dark:bg-green-900/20"
-                                    : "bg-gray-50 dark:bg-gray-800"
-                                }`}
-                              >
-                                <div className="flex items-center space-x-2">
-                                  {member.paidStatus ? (
-                                    <CircleCheck className="w-4 h-4 text-green-500" />
-                                  ) : (
-                                    <Circle className="w-4 h-4 text-gray-400" />
-                                  )}
-                                  <span>{member.userName}</span>
-                                </div>
-                                <span className="font-medium">
-                                  ₹
-                                  {Math.round(
-                                    row.amount / row.members.length
-                                  ).toLocaleString("en-IN")}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                          <DialogDescription className="text-sm text-gray-500 pt-2 border-t">
-                            Created on{" "}
-                            {new Date(row.createdAt).toLocaleDateString(
-                              "en-GB",
-                              {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
-                            )}
-                          </DialogDescription>
-                        </DialogContent>
-                      </Dialog>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-            <tfoot className="bg-gray-50 dark:bg-gray-800 font-semibold">
-              <tr>
-                <td className="px-6 py-4">Total</td>
-                <td></td>
-                <td className="px-6 py-4">
-                  ₹
-                  {rows
-                    .reduce((sum, row) => sum + row.amount, 0)
-                    .toLocaleString("en-IN")}
-                </td>
-                <td></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-
-        <div className="p-4 border-t">
+        {/* Pagination Section */}
+        <div className="p-4 border-t dark:border-gray-800">
           <Pagination>
             <PaginationContent className="flex flex-wrap items-center justify-center gap-2">
               {/* Previous Button */}
