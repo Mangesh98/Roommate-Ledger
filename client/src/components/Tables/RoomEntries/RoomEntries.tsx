@@ -71,30 +71,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover";
 import { format } from "date-fns";
 import { Calendar } from "../../ui/calendar";
 import { getRoomDetailsAction } from "../../../api/room";
-
-// const TableHeader: React.FC<{ children: React.ReactNode }> = ({
-//   children,
-//   ...props
-// }) => (
-//   <th
-//     scope="col"
-//     className="px-6 py-4 text-left font-medium text-gray-600 dark:text-gray-300"
-//     {...props}
-//   >
-//     {children}
-//   </th>
-// );
-
-// const TableCell: React.FC<{
-//   className?: string;
-//   children: React.ReactNode;
-// }> = ({ className, children, ...props }) => (
-//   <td className={cn("px-6 py-4 text-sm", className)} {...props}>
-//     {children}
-//   </td>
-// );
+import { useBreakpoint } from "../../../hooks/useBreakpoint";
+import { MobileView } from "./MobileView";
 
 const RoomEntries = () => {
+  const { isMobile } = useBreakpoint();
   const [rows, setRows] = useState<EntryType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [, setCheckboxStates] = useState<{ [key: string]: boolean }>({});
@@ -396,161 +377,388 @@ const RoomEntries = () => {
   }
 
   return (
-    <>
-      <div className="container mx-auto px-4 py-8">
-        {/* Header Section */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              {currentUser?.roomName}
-            </h1>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">
-              Manage room expenses and track payments
-            </p>
-          </div>
-          <Link
-            to="/new-entry"
-            className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Entry
-          </Link>
+    <div className="container mx-auto px-4 py-8">
+      {/* Header Section */}
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            {currentUser?.roomName}
+          </h1>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
+            Manage room expenses and track payments
+          </p>
+        </div>
+        <Link
+          to="/new-entry"
+          className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          New Entry
+        </Link>
+      </div>
+
+      {/* Filters Section */}
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border mb-6">
+        <div className="p-4 border-b dark:border-gray-700">
+          <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+            Filters
+          </h3>
         </div>
 
-        {/* Filters Section */}
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border p-4 mb-6">
-          <div className="flex flex-wrap gap-4 items-center">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex items-center">
-                  {pageLimit} <ChevronDown className="ml-2" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-full">
-                <DropdownMenuLabel>Entries per page</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuRadioGroup
-                  value={pageLimit}
-                  onValueChange={setPageLimit}
-                >
-                  {generateOptions.map((option) => (
-                    <DropdownMenuRadioItem key={option} value={option}>
-                      {option}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-[300px] justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date?.from ? (
-                    date.to ? (
-                      <>
-                        {format(date.from, "LLL dd, y")} -{" "}
-                        {format(date.to, "LLL dd, y")}
-                      </>
-                    ) : (
-                      format(date.from, "LLL dd, y")
-                    )
-                  ) : (
-                    <span>Pick a date range</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={date?.from}
-                  selected={date}
-                  onSelect={setDate}
-                  numberOfMonths={2}
-                  disabled={(date) =>
-                    date > new Date() || date < new Date("1900-01-01")
-                  }
-                />
-              </PopoverContent>
-            </Popover>
-
-            <Button
-              disabled={date == undefined}
-              variant="secondary"
-              onClick={() => fetchEntries(1)}
-            >
-              Apply Filter
-            </Button>
-            <Button
-              disabled={date == undefined}
-              variant="outline"
-              onClick={() => fetchEntries(1, true)}
-            >
-              Reset
-            </Button>
-
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="default">Mark Payments</Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Select Payment Action</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Choose a user to mark their payments or mark all as paid.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-
-                <div className="flex flex-col gap-2">
-                  <AlertDialogAction
-                    onClick={() => handleMarkAsPaid("All")}
-                    className="bg-blue-500 hover:bg-blue-600 text-white"
+        {isMobile ? (
+          // Mobile Vertical Layout
+          <div className="p-4 space-y-4">
+            {/* Entries per page */}
+            <div className="w-full">
+              <label className="text-sm text-gray-500 dark:text-gray-400 mb-1.5 block">
+                Entries per page
+              </label>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between">
+                    {pageLimit} entries
+                    <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[200px]">
+                  <DropdownMenuLabel>Select entries</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuRadioGroup
+                    value={pageLimit}
+                    onValueChange={setPageLimit}
                   >
-                    Mark All as Paid
-                  </AlertDialogAction>
+                    {generateOptions.map((option) => (
+                      <DropdownMenuRadioItem key={option} value={option}>
+                        {option} entries
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
 
-                  <div className="relative my-2">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
+            {/* Date Range Picker */}
+            <div className="w-full">
+              <label className="text-sm text-gray-500 dark:text-gray-400 mb-1.5 block">
+                Date range
+              </label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !date && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date?.from ? (
+                      date.to ? (
+                        <>
+                          {format(date.from, "MMM d, y")} -{" "}
+                          {format(date.to, "MMM d, y")}
+                        </>
+                      ) : (
+                        format(date.from, "MMM d, y")
+                      )
+                    ) : (
+                      <span>Pick a date range</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={date?.from}
+                    selected={date}
+                    onSelect={setDate}
+                    numberOfMonths={1}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Filter Actions */}
+            <div className="flex gap-2">
+              <Button
+                className="flex-1"
+                disabled={date == undefined}
+                variant="secondary"
+                onClick={() => fetchEntries(1)}
+              >
+                Apply Filter
+              </Button>
+              <Button
+                className="flex-1"
+                disabled={date == undefined}
+                variant="outline"
+                onClick={() => fetchEntries(1, true)}
+              >
+                Reset
+              </Button>
+            </div>
+
+            {/* Mark Payments Button */}
+            <Button
+              variant="default"
+              className="w-full"
+              onClick={() => handleMarkAsPaid("All")}
+            >
+              Mark All as Paid
+            </Button>
+          </div>
+        ) : (
+          // Desktop Horizontal Layout
+          <div className="p-4">
+            <div className="flex flex-wrap items-center gap-4">
+              {/* Entries per page */}
+              <div className="w-48">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-between border-gray-200 dark:border-gray-700
+                        bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    >
+                      {pageLimit} entries
+                      <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-[200px]">
+                    <DropdownMenuLabel>Select entries</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuRadioGroup
+                      value={pageLimit}
+                      onValueChange={setPageLimit}
+                    >
+                      {generateOptions.map((option) => (
+                        <DropdownMenuRadioItem
+                          key={option}
+                          value={option}
+                          className="cursor-pointer"
+                        >
+                          {option} entries
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {/* Date Range Picker */}
+              <div className="w-[300px]">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal border-gray-200 dark:border-gray-700",
+                        !date && "text-gray-500 dark:text-gray-400"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {date?.from ? (
+                        date.to ? (
+                          <>
+                            {format(date.from, "MMM d, y")} -{" "}
+                            {format(date.to, "MMM d, y")}
+                          </>
+                        ) : (
+                          format(date.from, "MMM d, y")
+                        )
+                      ) : (
+                        <span>Pick a date range</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      initialFocus
+                      mode="range"
+                      defaultMonth={date?.from}
+                      selected={date}
+                      onSelect={setDate}
+                      numberOfMonths={2}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                      className="rounded-md border border-gray-200 dark:border-gray-700"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Filter Actions */}
+              <div className="flex items-center gap-2">
+                <Button
+                  disabled={date == undefined}
+                  variant="secondary"
+                  onClick={() => fetchEntries(1)}
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-900
+                    dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-100
+                    border border-gray-200 dark:border-gray-700"
+                >
+                  Apply Filter
+                </Button>
+                <Button
+                  disabled={date == undefined}
+                  variant="outline"
+                  onClick={() => fetchEntries(1, true)}
+                  className="border-gray-200 dark:border-gray-700
+                    hover:bg-gray-100 dark:hover:bg-gray-800"
+                >
+                  Reset
+                </Button>
+              </div>
+
+              {/* Mark Payments Button */}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="default"
+                    className="bg-blue-600 hover:bg-blue-700 
+                      dark:bg-blue-500 dark:hover:bg-blue-600 text-white"
+                  >
+                    Mark Payments
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="sm:max-w-md">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Select Payment Action</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Choose a user to mark their payments or mark all as paid.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="flex flex-col gap-2">
+                    <AlertDialogAction
+                      onClick={() => handleMarkAsPaid("All")}
+                      className="bg-blue-500 hover:bg-blue-600 text-white"
+                    >
+                      Mark All as Paid
+                    </AlertDialogAction>
+
+                    <div className="relative my-2">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t dark:border-gray-700" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">
+                          Or select individual user
+                        </span>
+                      </div>
                     </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">
-                        Or select individual user
-                      </span>
-                    </div>
+
+                    {roomMembers.map((member) => (
+                      <AlertDialogAction
+                        key={member._id}
+                        onClick={() => handleMarkAsPaid(member.userId)}
+                        className="w-full bg-gray-100 hover:bg-gray-200 
+                          dark:bg-gray-800 dark:hover:bg-gray-700"
+                      >
+                        Mark {member.userName}'s Payments
+                      </AlertDialogAction>
+                    ))}
                   </div>
 
-                  {roomMembers.map((member) => (
-                    <AlertDialogAction
-                      key={member._id}
-                      onClick={() => handleMarkAsPaid(member.userId)}
-                      className="w-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
-                    >
-                      Mark {member.userName}'s Payments
-                    </AlertDialogAction>
-                  ))}
-                </div>
-
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="border-gray-200 dark:border-gray-700">
+                      Cancel
+                    </AlertDialogCancel>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </div>
+        )}
+      </div>
+
+      {/* Content Section */}
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border">
+        <div className="p-4 border-b">
+          <h2 className="text-xl font-semibold">Room Entries</h2>
         </div>
 
-        {/* Get Entries */}
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border">
-          <div className="p-4 border-b">
-            <h2 className="text-xl font-semibold">Room Entries</h2>
-          </div>
+        {loading ? (
+          <>
+            <div className="relative w-full overflow-auto">
+              <div className="inline-block mb-4">
+                <Skeleton className="h-8 w-1/4 mb-2" />
+                <Skeleton className="h-8 w-1/5" />
+              </div>
+              <Skeleton className="h-6 w-1/3 mb-4" />
+              <div className="overflow-x-auto">
+                <table className="w-full table-auto min-w-max">
+                  <thead className="text-sm font-medium text-gray-900 dark:text-white bg-gray-200 dark:bg-gray-800">
+                    <tr className="border-b">
+                      {[
+                        "Date",
+                        "Name",
+                        "मकसद",
+                        "Amount",
+                        "Status",
+                        "Delete",
+                        "Info",
+                      ].map((_header, index) => (
+                        <th
+                          key={index}
+                          scope="col"
+                          className="px-6 py-3 text-left"
+                        >
+                          <Skeleton className="h-4 w-full" />
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+
+                  <tbody className="text-sm text-gray-900 dark:text-white divide-y divide-gray-200 dark:divide-gray-700">
+                    {Array.from({ length: 5 }).map((_, rowIndex) => (
+                      <tr
+                        key={rowIndex}
+                        className="border-b transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        {Array.from({ length: 7 }).map((_, colIndex) => (
+                          <td key={colIndex} className="px-6 py-4">
+                            <Skeleton className="h-4 w-full" />
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+
+                  <tfoot className="bg-gray-200 dark:bg-gray-800">
+                    <tr>
+                      <th scope="row" className="px-6 py-3 text-base text-left">
+                        <Skeleton className="h-4 w-full" />
+                      </th>
+                      {Array.from({ length: 6 }).map((_, colIndex) => (
+                        <td key={colIndex} className="px-6 py-3">
+                          <Skeleton className="h-4 w-full" />
+                        </td>
+                      ))}
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              {/* Pagination controls */}
+              <div className="pagination mt-2 flex space-x-2">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <Skeleton key={index} className="h-8 w-8" />
+                ))}
+              </div>
+            </div>
+          </>
+        ) : isMobile ? (
+          <MobileView
+            rows={rows}
+            currentUser={currentUser}
+            handleUpdateEntry={handleUpdateEntry}
+            handleDeleteClick={handleDeleteClick}
+          />
+        ) : (
           <div className="overflow-x-auto">
             <table className="w-full table-auto">
               <thead className="bg-gray-50 dark:bg-gray-800">
@@ -753,149 +961,149 @@ const RoomEntries = () => {
               </tfoot>
             </table>
           </div>
-        </div>
+        )}
+      </div>
 
-        <div className="w-full mt-4">
-          <Pagination>
-            <PaginationContent className="flex flex-wrap items-center justify-center gap-2">
-              {/* Previous Button */}
-              <PaginationItem className="hidden sm:block">
-                <PaginationPrevious
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (currentPage > 1) handlePaginationClick(currentPage - 1);
-                  }}
-                  className={
-                    currentPage === 1 ? "pointer-events-none opacity-50" : ""
-                  }
-                />
-              </PaginationItem>
+      <div className="w-full mt-4">
+        <Pagination>
+          <PaginationContent className="flex flex-wrap items-center justify-center gap-2">
+            {/* Previous Button */}
+            <PaginationItem className="hidden sm:block">
+              <PaginationPrevious
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (currentPage > 1) handlePaginationClick(currentPage - 1);
+                }}
+                className={
+                  currentPage === 1 ? "pointer-events-none opacity-50" : ""
+                }
+              />
+            </PaginationItem>
 
-              {/* Mobile Previous Button */}
-              <PaginationItem className="sm:hidden">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => {
-                    if (currentPage > 1) handlePaginationClick(currentPage - 1);
-                  }}
-                  disabled={currentPage === 1}
-                  className="h-8 w-8"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-              </PaginationItem>
+            {/* Mobile Previous Button */}
+            <PaginationItem className="sm:hidden">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  if (currentPage > 1) handlePaginationClick(currentPage - 1);
+                }}
+                disabled={currentPage === 1}
+                className="h-8 w-8"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            </PaginationItem>
 
-              {/* Simplified Mobile View */}
-              <div className="flex items-center gap-1 sm:hidden">
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Page {currentPage} of {totalPages}
-                </span>
-              </div>
+            {/* Simplified Mobile View */}
+            <div className="flex items-center gap-1 sm:hidden">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                Page {currentPage} of {totalPages}
+              </span>
+            </div>
 
-              {/* Desktop Pagination */}
-              <div className="hidden sm:flex items-center gap-1">
-                {/* First page when not in range */}
-                {getPaginationPages(currentPage, totalPages)[0] > 1 && (
-                  <>
-                    <PaginationItem>
-                      <PaginationLink
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handlePaginationClick(1);
-                        }}
-                      >
-                        1
-                      </PaginationLink>
-                    </PaginationItem>
-                    {getPaginationPages(currentPage, totalPages)[0] > 2 && (
-                      <PaginationItem>
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    )}
-                  </>
-                )}
-
-                {/* Page numbers */}
-                {getPaginationPages(currentPage, totalPages).map((page) => (
-                  <PaginationItem key={page}>
+            {/* Desktop Pagination */}
+            <div className="hidden sm:flex items-center gap-1">
+              {/* First page when not in range */}
+              {getPaginationPages(currentPage, totalPages)[0] > 1 && (
+                <>
+                  <PaginationItem>
                     <PaginationLink
                       href="#"
                       onClick={(e) => {
                         e.preventDefault();
-                        handlePaginationClick(page);
+                        handlePaginationClick(1);
                       }}
-                      isActive={currentPage === page}
                     >
-                      {page}
+                      1
                     </PaginationLink>
                   </PaginationItem>
-                ))}
-
-                {/* Last page when not in range */}
-                {getPaginationPages(currentPage, totalPages).slice(-1)[0] <
-                  totalPages && (
-                  <>
-                    {getPaginationPages(currentPage, totalPages).slice(-1)[0] <
-                      totalPages - 1 && (
-                      <PaginationItem>
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    )}
+                  {getPaginationPages(currentPage, totalPages)[0] > 2 && (
                     <PaginationItem>
-                      <PaginationLink
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handlePaginationClick(totalPages);
-                        }}
-                      >
-                        {totalPages}
-                      </PaginationLink>
+                      <PaginationEllipsis />
                     </PaginationItem>
-                  </>
-                )}
-              </div>
+                  )}
+                </>
+              )}
 
-              {/* Next Button Desktop */}
-              <PaginationItem className="hidden sm:block">
-                <PaginationNext
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (currentPage < totalPages)
-                      handlePaginationClick(currentPage + 1);
-                  }}
-                  className={
-                    currentPage === totalPages
-                      ? "pointer-events-none opacity-50"
-                      : ""
-                  }
-                />
-              </PaginationItem>
+              {/* Page numbers */}
+              {getPaginationPages(currentPage, totalPages).map((page) => (
+                <PaginationItem key={page}>
+                  <PaginationLink
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePaginationClick(page);
+                    }}
+                    isActive={currentPage === page}
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
 
-              {/* Mobile Next Button */}
-              <PaginationItem className="sm:hidden">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => {
-                    if (currentPage < totalPages)
-                      handlePaginationClick(currentPage + 1);
-                  }}
-                  disabled={currentPage === totalPages}
-                  className="h-8 w-8"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
+              {/* Last page when not in range */}
+              {getPaginationPages(currentPage, totalPages).slice(-1)[0] <
+                totalPages && (
+                <>
+                  {getPaginationPages(currentPage, totalPages).slice(-1)[0] <
+                    totalPages - 1 && (
+                    <PaginationItem>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  )}
+                  <PaginationItem>
+                    <PaginationLink
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePaginationClick(totalPages);
+                      }}
+                    >
+                      {totalPages}
+                    </PaginationLink>
+                  </PaginationItem>
+                </>
+              )}
+            </div>
+
+            {/* Next Button Desktop */}
+            <PaginationItem className="hidden sm:block">
+              <PaginationNext
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (currentPage < totalPages)
+                    handlePaginationClick(currentPage + 1);
+                }}
+                className={
+                  currentPage === totalPages
+                    ? "pointer-events-none opacity-50"
+                    : ""
+                }
+              />
+            </PaginationItem>
+
+            {/* Mobile Next Button */}
+            <PaginationItem className="sm:hidden">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  if (currentPage < totalPages)
+                    handlePaginationClick(currentPage + 1);
+                }}
+                disabled={currentPage === totalPages}
+                className="h-8 w-8"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       </div>
-    </>
+    </div>
   );
 };
 
