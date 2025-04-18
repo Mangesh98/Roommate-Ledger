@@ -1,71 +1,137 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const userModel = require("../models/user");
 const roomModel = require("../models/room");
+const { sendVerificationEmail } = require("../utils/emailService");
+const e = require("express");
 const router = express.Router();
 
 // User Registration
 router.post("/register", async (req, res) => {
 	const { name, email, password, room } = req.body;
+	
+	try {
+		// Validate user input
+		if (!name || !password || !email || !room) {
+			return res
+				.status(400)
+				.json({ success: false, message: "Please provide valid details" });
+		}
 
-	// Validate user input
-	if (!name || !password || !email || !room) {
-		return res
-			.status(400)
-			.json({ success: false, message: "Please provide valid details" });
+		const roomDec = await roomModel.findOne({ name: room });
+		if (!roomDec) {
+			return res.status(409).json({ success: false, message: "Invalid Room !" });
+		}
+
+		const roomId = roomDec._id;
+
+		// Check for existing user
+		const existingUser = await userModel.findOne({ email });
+		if (existingUser) {
+			return res
+				.status(409)
+				.json({ success: false, message: "Email already exists" });
+		}
+
+		// Hash password before storing
+		const hashedPassword = await bcrypt.hash(password, 10);
+
+		const verificationToken = crypto.randomBytes(32).toString("hex");
+		const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+		// Store user data
+		const user = await userModel.create({
+			name,
+			email,
+			password: hashedPassword,
+			room: roomId,
+			verificationToken,
+			verificationExpires,
+			isVerified: false,
+		});
+
+		try {
+			// Update room using findByIdAndUpdate instead of direct push
+			const updatedRoom = await roomModel.findByIdAndUpdate(
+				roomId,
+				{
+					$push: {
+						members: {
+							userId: user._id,
+							userName: name,
+							userEmail: email
+						}
+					}
+				},
+				{ new: true, runValidators: true }
+			);
+
+			if (!updatedRoom) {
+				// If room update fails, cleanup the created user
+				await userModel.findByIdAndDelete(user._id);
+				return res.status(500).json({
+					success: false,
+					message: "Failed to update room with new member"
+				});
+			}
+
+			await sendVerificationEmail(email, verificationToken);
+
+			res.status(201).json({
+				success: true,
+				message: "Registration successful. Please check your email to verify your account.",
+			});
+		} catch (error) {
+			// If any error occurs, cleanup the created user
+			await userModel.findByIdAndDelete(user._id);
+			console.error("Registration error:", error);
+			res.status(500).json({
+				success: false,
+				message: "Error creating account. Please try again.",
+			});
+		}
+	} catch (error) {
+		// console.log(error);
+		
+		res.status(500).json({
+			success: false,
+			message: "Error creating account. Please try again.",
+		});
 	}
+});
 
-	const roomDec = await roomModel.findOne({ name: room });
-	if (!roomDec) {
-		return res.status(409).json({ success: false, message: "Invalid Room !" });
+// Email Verification
+router.get("/verify-email/:token", async (req, res) => {
+	try {
+		const user = await userModel.findOne({
+			verificationToken: req.params.token,
+			verificationExpires: { $gt: Date.now() },
+		});
+
+		if (!user) {
+			return res.status(400).json({
+				success: false,
+				message: "Invalid or expired verification token",
+			});
+		}
+
+		user.isVerified = true;
+		user.verificationToken = undefined;
+		user.verificationExpires = undefined;
+		await user.save();
+
+		res.json({
+			success: true,
+			message: "Email verified successfully. You can now login.",
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "Error verifying email",
+		});
 	}
-
-	const roomId = roomDec._id;
-
-	// Check for existing user
-	const existingUser = await userModel.findOne({ email });
-	if (existingUser) {
-		return res
-			.status(409)
-			.json({ success: false, message: "Email already exists" });
-	}
-
-	// Hash password before storing
-	const hashedPassword = await bcrypt.hash(password, 10);
-
-	// Store user data
-	const user = await userModel.create({
-		name,
-		email,
-		password: hashedPassword,
-		room: roomId,
-	});
-
-	// Add the user to the room members
-	roomDec.members.push({
-		userId: user._id,
-		userName: name,
-		userEmail: email,
-	});
-	await roomDec.save();
-
-	let token = jwt.sign(
-		{ email: email, userId: user._id, room: roomId, name: name },
-		process.env.JWT_SECRET
-	);
-
-	res.cookie("token", token, {
-		httpOnly: true,
-		sameSite: 'None',
-		secure: true,
-	});
-
-	res.status(201).json({
-		success: true,
-		message: "User registered successfully",
-		token: token,
-	});
 });
 
 // User Login
@@ -93,18 +159,7 @@ router.post("/login", async (req, res) => {
 			.status(401)
 			.json({ success: false, message: "Invalid email or password" });
 	}
-	// const roomResponse = await roomModel.findOne({ _id: room });
-	// if (!roomResponse) {
-	// 	return res.status(401).json({ success: false, message: "Invalid Room !" });
-	// }
-	// const userData = {
-	// 	userId: user._id,
-	// 	userName: user.name,
-	// 	email: user.email,
-	// 	roomId: user.room,
-	// 	roomName: roomResponse.name,
-	// };
-	// console.log(userData);
+
 	let token = jwt.sign(
 		{ email: email, userId: user._id, room: user.room, name: user.name },
 		process.env.JWT_SECRET
@@ -119,7 +174,6 @@ router.post("/login", async (req, res) => {
 		message: "Login successful",
 		token: token,
 	});
-	// userData: userData,
 });
 
 module.exports = router;

@@ -91,7 +91,7 @@ export const MobileView = ({
                         Paid
                       </span>
                     );
-                  } else {
+                  } else if( currentUserMember && !currentUserMember.paidStatus) {
                     return (
                       <button
                         onClick={() => handleUpdateEntry(row)}

@@ -91,7 +91,6 @@ const RoomEntries = () => {
   const currentUser = useSelector((state: RootState) => state.currentUser);
   const [date, setDate] = useState<DateRange | undefined>(undefined);
   const [roomMembers, setRoomMembers] = useState<RoomMembers[]>([]);
-
   const fetchEntries = async (page: number, filter?: boolean) => {
     setLoading(true);
     try {
@@ -198,7 +197,7 @@ const RoomEntries = () => {
   useEffect(() => {
     async function fetchMembers() {
       try {
-        const roomDetails = await getRoomDetailsAction(token);
+        const roomDetails = await getRoomDetailsAction(token);   
         setRoomMembers(roomDetails.members);
       } catch (error) {
         console.error("Failed to fetch members:", error);
@@ -502,14 +501,62 @@ const RoomEntries = () => {
               </Button>
             </div>
 
-            {/* Mark Payments Button */}
-            <Button
-              variant="default"
-              className="w-full"
-              onClick={() => handleMarkAsPaid("All")}
-            >
-              Mark All as Paid
-            </Button>
+             {/* Mark Payments Button */}
+             <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="default"
+                    className="bg-blue-600 hover:bg-blue-700 
+                      dark:bg-blue-500 dark:hover:bg-blue-600 text-white w-full"
+                  >
+                    Mark Payments
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="sm:max-w-md">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Select Payment Action</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Choose a user to mark their payments or mark all as paid.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="flex flex-col gap-2">
+                    <AlertDialogAction
+                      onClick={() => handleMarkAsPaid("All")}
+                      className="bg-blue-500 hover:bg-blue-600 text-white"
+                    >
+                      Mark All as Paid
+                    </AlertDialogAction>
+
+                    <div className="relative my-2">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t dark:border-gray-700" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">
+                          Or select individual user
+                        </span>
+                      </div>
+                    </div>
+
+                    {roomMembers.map((member) => (
+                      <AlertDialogAction
+                        key={member._id}
+                        onClick={() => handleMarkAsPaid(member.userId)}
+                        className="w-full bg-gray-100 hover:bg-gray-200 
+                          dark:bg-gray-800 dark:hover:bg-gray-700 text-white"
+                      >
+                        Mark {member.userName}'s Payments
+                      </AlertDialogAction>
+                    ))}
+                  </div>
+
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="border-gray-200 dark:border-gray-700">
+                      Cancel
+                    </AlertDialogCancel>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
           </div>
         ) : (
           // Desktop Horizontal Layout
@@ -657,7 +704,7 @@ const RoomEntries = () => {
                         key={member._id}
                         onClick={() => handleMarkAsPaid(member.userId)}
                         className="w-full bg-gray-100 hover:bg-gray-200 
-                          dark:bg-gray-800 dark:hover:bg-gray-700"
+                          dark:bg-gray-800 dark:hover:bg-gray-700 text-white"
                       >
                         Mark {member.userName}'s Payments
                       </AlertDialogAction>

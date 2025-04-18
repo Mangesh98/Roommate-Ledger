@@ -29,6 +29,16 @@ const userSchema = mongoose.Schema({
 		type: mongoose.Schema.Types.ObjectId,
 		ref:"room",
 	},
+	active:{
+		type: Boolean,
+		default: true
+	},
+	isVerified: {
+		type: Boolean,
+		default: false
+	},
+	verificationToken: String,
+	verificationExpires: Date
 });
 
 module.exports = mongoose.model("user", userSchema);

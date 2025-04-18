@@ -31,7 +31,7 @@ router.post("/get-room-details", auth, async (req, res) => {
 
 	try {
 		const room = await roomModel.findById(roomId);
-
+	
 		if (!room) {
 			return res.status(404).json({ message: "Room not found" });
 		}
@@ -49,7 +49,6 @@ router.post("/get-room-details", auth, async (req, res) => {
 				_id: member._id,
 			}));
 		const categories = await categoryModel.find().sort({ name: 1 }); // added - get categories for the room
-		// console.log("categories : ", categories);
 		res
 			.status(200)
 			.json({ success: true, members: members, categories: categories });

@@ -16,13 +16,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useToast } from "../ui/use-toast";
-import { useCookies } from "react-cookie";
 
 const SignUp = () => {
 	const navigate = useNavigate();
 	const { toast } = useToast();
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [, setCookie] = useCookies(["token"]);
 	const form = useForm<z.infer<typeof SignUpSchema>>({
 		resolver: zodResolver(SignUpSchema),
 		defaultValues: {
@@ -42,16 +40,14 @@ const SignUp = () => {
 				body: JSON.stringify(data),
 			});
 			const result = await response.json();
-			// console.log(result);
 			if (result.success) {
 				toast({
 					variant: "default",
 					title: "Account created successfully",
 					description: "Please check your email to verify your account",
 				});
-				setCookie("token", result.token, { path: "/" });
 
-				navigate("/");
+				navigate("/sign-in");
 			} else {
 				toast({
 					variant: "destructive",
