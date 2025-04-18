@@ -4,3 +4,4 @@
 client next_js
 server_with_ts
 client/.env
+.DS_Store
