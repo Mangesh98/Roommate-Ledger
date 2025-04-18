@@ -27,4 +27,25 @@ const sendVerificationEmail = async (email, verificationToken) => {
   await transporter.sendMail(mailOptions);
 };
 
-module.exports = { sendVerificationEmail };
+const sendEmail = async (msg) => {
+  await transporter.sendMail(msg);
+};
+
+const sendPasswordResetEmail = async (email, resetUrl) => {
+  const msg = {
+    to: email,
+    from: process.env.EMAIL_FROM,
+    subject: "Reset Your Password - Roommate Ledger",
+    html: `
+      <p>You requested a password reset for your Roommate Ledger account.</p>
+      <p>Click the link below to reset your password:</p>
+      <a href="${resetUrl}">${resetUrl}</a>
+      <p>If you didn't request this, please ignore this email.</p>
+      <p>This link will expire in 1 hour.</p>
+    `,
+  };
+
+  await sendEmail(msg);
+};
+
+module.exports = { sendVerificationEmail, sendPasswordResetEmail };

@@ -16,6 +16,8 @@ import { Provider } from "react-redux";
 import store from "./store/store.ts";
 import PaymentConfirmation from "./components/Tables/PaymentConfirmation/PaymentConfirmation.tsx";
 import VerifyEmail from "./components/VerifyEmail/VerifyEmail.tsx";
+import ForgotPassword from "./components/ForgotPassword/ForgotPassword.tsx";
+import ResetPassword from "./components/ResetPassword/ResetPassword.tsx";
 
 const router = createBrowserRouter([
   {
@@ -54,6 +56,16 @@ const router = createBrowserRouter([
     path: "/verify-email",
     element: <PublicRoute />,
     children: [{ path: "", element: <VerifyEmail /> }],
+  },
+  {
+    path: "/forgot-password",
+    element: <PublicRoute />,
+    children: [{ path: "", element: <ForgotPassword /> }],
+  },
+  {
+    path: "/reset-password/:token",
+    element: <PublicRoute />,
+    children: [{ path: "", element: <ResetPassword /> }],
   },
 ]);
 
