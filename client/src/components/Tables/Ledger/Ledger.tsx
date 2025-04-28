@@ -32,6 +32,18 @@ import {
 import { getAssociatedEntriesAction, getLedger } from "../../../api/ledger";
 import { useBreakpoint } from "../../../hooks/useBreakpoint";
 import { MobileView } from "./MobileView";
+import { motion, AnimatePresence } from "framer-motion";
+
+const skeletonVariants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+};
+
+const dialogVariants = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: { opacity: 1, scale: 1 },
+};
 
 interface Member {
   paidStatus: boolean;
@@ -47,7 +59,6 @@ const Ledger = () => {
   const [totalPages, setTotalPages] = useState<number>(0);
 
   const [rows, setRows] = useState<EntryType[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
   const [show, setShow] = useState<boolean>(false);
   const [name, setName] = useState("Name");
   const [cookies] = useCookies();
@@ -55,34 +66,33 @@ const Ledger = () => {
   const currentUser = useSelector((state: RootState) => state.currentUser);
   const [memberId, setMemberId] = useState<null | string>(null);
   const { isMobile } = useBreakpoint();
+  const [ledgerLoading, setLedgerLoading] = useState<boolean>(false);
+  const [entriesLoading, setEntriesLoading] = useState<boolean>(false);
 
   async function fetchLedgerEntries() {
-    setLoading(true);
+    setLedgerLoading(true);
     try {
       const response = await getLedger(token);
-      // console.log(response);
-
       const filteredLedgers = response.data.map((ledger: LedgerType) => ({
         ...ledger,
         members: ledger.members.filter(
           (member) => member.userId !== currentUser.userId
         ),
       }));
-
       setLedgers(filteredLedgers);
     } catch (error) {
       console.error("Failed to fetch entries:", error);
     } finally {
-      setLoading(false);
+      setLedgerLoading(false);
     }
   }
+
   useEffect(() => {
     fetchLedgerEntries();
   }, []);
 
   const fetchAssociatedEntries = async (page: number, memberId: string) => {
-    setLoading(true);
-    setShow(false);
+    setEntriesLoading(true);
     try {
       const result = await getAssociatedEntriesAction(
         page,
@@ -90,23 +100,20 @@ const Ledger = () => {
         token,
         memberId
       );
-      // console.log("Ledger Associated ", result, show);
       if (result.data) {
         const member = result.data[0].members.find(
           (member: Member) => member.userId === memberId
         );
-        // console.log(member);
-
         setName(member?.userName || "Name");
-        setShow(true);
         setRows(result.data);
         setCurrentPage(page);
         setTotalPages(result.pagination.totalPages);
+        setShow(true);
       }
     } catch (error) {
-      console.error("Error fetching My Entries", error);
+      console.error("Error fetching entries:", error);
     } finally {
-      setLoading(false);
+      setEntriesLoading(false);
     }
   };
 
@@ -140,10 +147,24 @@ const Ledger = () => {
   };
 
   return (
-    <div>
-      <div className="rounded-lg border shadow-sm bg-white dark:bg-gray-900">
-        {loading ? (
-          <div className="relative w-full overflow-auto">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="container mx-auto"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-lg border shadow-sm bg-white dark:bg-gray-900"
+      >
+        {ledgerLoading ? (
+          <motion.div
+            variants={skeletonVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="relative w-full overflow-auto"
+          >
             <h2 className="mb-2">Ledger</h2>
             <div className="overflow-x-auto">
               <table className="w-full table-auto min-w-max">
@@ -192,7 +213,7 @@ const Ledger = () => {
                 </tfoot>
               </table>
             </div>
-          </div>
+          </motion.div>
         ) : isMobile ? (
           <MobileView
             ledgers={ledgers}
@@ -207,9 +228,10 @@ const Ledger = () => {
                 : undefined
             }
             currentUser={currentUser}
+            entriesLoading={entriesLoading}
           />
         ) : (
-          <>
+          <AnimatePresence mode="wait">
             <div className="overflow-x-auto">
               <table className="w-full table-auto">
                 <thead className="bg-gray-50 dark:bg-gray-800">
@@ -247,63 +269,76 @@ const Ledger = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {ledgers.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={5}
-                        className="px-6 py-8 text-center text-gray-500"
+                  <AnimatePresence>
+                    {ledgers.length === 0 ? (
+                      <motion.tr
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
                       >
-                        No transactions found
-                      </td>
-                    </tr>
-                  ) : (
-                    ledgers.flatMap((ledger) =>
-                      ledger.members.map((member) => {
-                        const balance = member.receivable - member.payable;
-                        return (
-                          <tr
-                            key={member._id}
-                            className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                          >
-                            <td className="px-6 py-4 whitespace-nowrap font-medium">
-                              {member.userName}
-                            </td>
-                            <td className="px-6 py-4 text-red-600 dark:text-red-400">
-                              ₹{member.payable.toLocaleString("en-IN")}
-                            </td>
-                            <td className="px-6 py-4 text-green-600 dark:text-green-400">
-                              ₹{member.receivable.toLocaleString("en-IN")}
-                            </td>
-                            <td
-                              className={`px-6 py-4 font-medium ${
-                                balance >= 0
-                                  ? "text-green-600 dark:text-green-400"
-                                  : "text-red-600 dark:text-red-400"
-                              }`}
+                        <td
+                          colSpan={5}
+                          className="px-6 py-8 text-center text-gray-500"
+                        >
+                          No transactions found
+                        </td>
+                      </motion.tr>
+                    ) : (
+                      ledgers.flatMap((ledger) =>
+                        ledger.members.map((member, index) => {
+                          const balance = member.receivable - member.payable;
+                          return (
+                            <motion.tr
+                              key={member._id}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -20 }}
+                              transition={{
+                                duration: 0.2,
+                                delay: index * 0.05,
+                              }}
+                              className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                             >
-                              ₹{Math.abs(balance).toLocaleString("en-IN")}
-                              <span className="text-xs ml-1">
-                                {balance >= 0 ? "(to receive)" : "(to pay)"}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4">
-                              {Math.abs(balance) > 0 && (
-                                <button
-                                  onClick={() => viewEntries(member.userId)}
-                                  className="inline-flex items-center px-3 py-1 rounded-md text-sm
+                              <td className="px-6 py-4 whitespace-nowrap font-medium">
+                                {member.userName}
+                              </td>
+                              <td className="px-6 py-4 text-red-600 dark:text-red-400">
+                                ₹{member.payable.toLocaleString("en-IN")}
+                              </td>
+                              <td className="px-6 py-4 text-green-600 dark:text-green-400">
+                                ₹{member.receivable.toLocaleString("en-IN")}
+                              </td>
+                              <td
+                                className={`px-6 py-4 font-medium ${
+                                  balance >= 0
+                                    ? "text-green-600 dark:text-green-400"
+                                    : "text-red-600 dark:text-red-400"
+                                }`}
+                              >
+                                ₹{Math.abs(balance).toLocaleString("en-IN")}
+                                <span className="text-xs ml-1">
+                                  {balance >= 0 ? "(to receive)" : "(to pay)"}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4">
+                                {Math.abs(balance) > 0 && (
+                                  <button
+                                    onClick={() => viewEntries(member.userId)}
+                                    className="inline-flex items-center px-3 py-1 rounded-md text-sm
                           bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 
                           dark:text-blue-400 dark:hover:bg-blue-900/50 transition-colors"
-                                >
-                                  <Info className="w-4 h-4 mr-1" />
-                                  Details
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )
-                  )}
+                                  >
+                                    <Info className="w-4 h-4 mr-1" />
+                                    Details
+                                  </button>
+                                )}
+                              </td>
+                            </motion.tr>
+                          );
+                        })
+                      )
+                    )}
+                  </AnimatePresence>
                 </tbody>
                 <tfoot className="bg-gray-50 dark:bg-gray-800 font-semibold">
                   <tr>
@@ -342,9 +377,13 @@ const Ledger = () => {
               </table>
             </div>
 
-            {/* Show associated entries only in desktop view */}
             {!isMobile && show && (
-              <div className="mt-8 rounded-lg border shadow-sm bg-white dark:bg-gray-900">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="mt-8 rounded-lg border shadow-sm bg-white dark:bg-gray-900"
+              >
                 <div className="p-4 border-b flex items-center justify-between">
                   <div>
                     <h2 className="text-xl font-semibold">
@@ -673,12 +712,12 @@ const Ledger = () => {
                     </PaginationContent>
                   </Pagination>
                 </div>
-              </div>
+              </motion.div>
             )}
-          </>
+          </AnimatePresence>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 
