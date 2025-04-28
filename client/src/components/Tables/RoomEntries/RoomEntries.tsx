@@ -68,11 +68,23 @@ import { setCurrentUser } from "../../../store/userSlice";
 import { Skeleton } from "../../ui/skeleton";
 import { DateRange } from "react-day-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover";
-import { format } from "date-fns";
+import { format} from "date-fns";
 import { Calendar } from "../../ui/calendar";
 import { getRoomDetailsAction } from "../../../api/room";
 import { useBreakpoint } from "../../../hooks/useBreakpoint";
 import { MobileView } from "./MobileView";
+import { motion, AnimatePresence } from "framer-motion";
+
+const skeletonVariants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+};
+
+const dialogVariants = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: { opacity: 1, scale: 1 },
+};
 
 const RoomEntries = () => {
   const { isMobile } = useBreakpoint();
@@ -197,7 +209,7 @@ const RoomEntries = () => {
   useEffect(() => {
     async function fetchMembers() {
       try {
-        const roomDetails = await getRoomDetailsAction(token);   
+        const roomDetails = await getRoomDetailsAction(token);
         setRoomMembers(roomDetails.members);
       } catch (error) {
         console.error("Failed to fetch members:", error);
@@ -306,79 +318,97 @@ const RoomEntries = () => {
     return pages;
   };
 
+  // Handle Entry per page change
+  const handleEntriesPerPageChange = (value: string) => {
+    setCurrentPage(1);
+    setPageLimit(value);
+  };
   if (loading) {
     return (
-      <>
-        <div className="relative w-full overflow-auto">
-          <div className="inline-block mb-4">
-            <Skeleton className="h-8 w-1/4 mb-2" />
-            <Skeleton className="h-8 w-1/5" />
-          </div>
-          <Skeleton className="h-6 w-1/3 mb-4" />
-          <div className="overflow-x-auto">
-            <table className="w-full table-auto min-w-max">
-              <thead className="text-sm font-medium text-gray-900 dark:text-white bg-gray-200 dark:bg-gray-800">
-                <tr className="border-b">
-                  {[
-                    "Date",
-                    "Name",
-                    "मकसद",
-                    "Amount",
-                    "Status",
-                    "Delete",
-                    "Info",
-                  ].map((_header, index) => (
-                    <th key={index} scope="col" className="px-6 py-3 text-left">
-                      <Skeleton className="h-4 w-full" />
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-
-              <tbody className="text-sm text-gray-900 dark:text-white divide-y divide-gray-200 dark:divide-gray-700">
-                {Array.from({ length: 5 }).map((_, rowIndex) => (
-                  <tr
-                    key={rowIndex}
-                    className="border-b transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
-                  >
-                    {Array.from({ length: 7 }).map((_, colIndex) => (
-                      <td key={colIndex} className="px-6 py-4">
-                        <Skeleton className="h-4 w-full" />
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-
-              <tfoot className="bg-gray-200 dark:bg-gray-800">
-                <tr>
-                  <th scope="row" className="px-6 py-3 text-base text-left">
+      <motion.div
+        variants={skeletonVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        className="relative w-full overflow-auto"
+      >
+        <div className="inline-block mb-4">
+          <Skeleton className="h-8 w-1/4 mb-2" />
+          <Skeleton className="h-8 w-1/5" />
+        </div>
+        <Skeleton className="h-6 w-1/3 mb-4" />
+        <div className="overflow-x-auto">
+          <table className="w-full table-auto min-w-max">
+            <thead className="text-sm font-medium text-gray-900 dark:text-white bg-gray-200 dark:bg-gray-800">
+              <tr className="border-b">
+                {[
+                  "Date",
+                  "Name",
+                  "मकसद",
+                  "Amount",
+                  "Status",
+                  "Delete",
+                  "Info",
+                ].map((_header, index) => (
+                  <th key={index} scope="col" className="px-6 py-3 text-left">
                     <Skeleton className="h-4 w-full" />
                   </th>
-                  {Array.from({ length: 6 }).map((_, colIndex) => (
-                    <td key={colIndex} className="px-6 py-3">
+                ))}
+              </tr>
+            </thead>
+
+            <tbody className="text-sm text-gray-900 dark:text-white divide-y divide-gray-200 dark:divide-gray-700">
+              {Array.from({ length: 5 }).map((_, rowIndex) => (
+                <tr
+                  key={rowIndex}
+                  className="border-b transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  {Array.from({ length: 7 }).map((_, colIndex) => (
+                    <td key={colIndex} className="px-6 py-4">
                       <Skeleton className="h-4 w-full" />
                     </td>
                   ))}
                 </tr>
-              </tfoot>
-            </table>
-          </div>
-          {/* Pagination controls */}
-          <div className="pagination mt-2 flex space-x-2">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <Skeleton key={index} className="h-8 w-8" />
-            ))}
-          </div>
+              ))}
+            </tbody>
+
+            <tfoot className="bg-gray-200 dark:bg-gray-800">
+              <tr>
+                <th scope="row" className="px-6 py-3 text-base text-left">
+                  <Skeleton className="h-4 w-full" />
+                </th>
+                {Array.from({ length: 6 }).map((_, colIndex) => (
+                  <td key={colIndex} className="px-6 py-3">
+                    <Skeleton className="h-4 w-full" />
+                  </td>
+                ))}
+              </tr>
+            </tfoot>
+          </table>
         </div>
-      </>
+        {/* Pagination controls */}
+        <div className="pagination mt-2 flex space-x-2">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <Skeleton key={index} className="h-8 w-8" />
+          ))}
+        </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="container mx-auto px-4 py-8"
+    >
       {/* Header Section */}
-      <div className="flex justify-between items-center mb-8">
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.1 }}
+        className="flex justify-between items-center mb-8"
+      >
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             {currentUser?.roomName}
@@ -394,10 +424,15 @@ const RoomEntries = () => {
           <Plus className="w-4 h-4 mr-2" />
           New Entry
         </Link>
-      </div>
+      </motion.div>
 
       {/* Filters Section */}
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border mb-6">
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border mb-6"
+      >
         <div className="p-4 border-b dark:border-gray-700">
           <h3 className="text-sm font-medium text-gray-900 dark:text-white">
             Filters
@@ -424,7 +459,7 @@ const RoomEntries = () => {
                   <DropdownMenuSeparator />
                   <DropdownMenuRadioGroup
                     value={pageLimit}
-                    onValueChange={setPageLimit}
+                    onValueChange={()=>handleEntriesPerPageChange(pageLimit)}
                   >
                     {generateOptions.map((option) => (
                       <DropdownMenuRadioItem key={option} value={option}>
@@ -501,62 +536,62 @@ const RoomEntries = () => {
               </Button>
             </div>
 
-             {/* Mark Payments Button */}
-             <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="default"
-                    className="bg-blue-600 hover:bg-blue-700 
+            {/* Mark Payments Button */}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="default"
+                  className="bg-blue-600 hover:bg-blue-700 
                       dark:bg-blue-500 dark:hover:bg-blue-600 text-white w-full"
+                >
+                  Mark Payments
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="sm:max-w-md">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Select Payment Action</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Choose a user to mark their payments or mark all as paid.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="flex flex-col gap-2">
+                  <AlertDialogAction
+                    onClick={() => handleMarkAsPaid("All")}
+                    className="bg-blue-500 hover:bg-blue-600 text-white"
                   >
-                    Mark Payments
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent className="sm:max-w-md">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Select Payment Action</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Choose a user to mark their payments or mark all as paid.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <div className="flex flex-col gap-2">
-                    <AlertDialogAction
-                      onClick={() => handleMarkAsPaid("All")}
-                      className="bg-blue-500 hover:bg-blue-600 text-white"
-                    >
-                      Mark All as Paid
-                    </AlertDialogAction>
+                    Mark All as Paid
+                  </AlertDialogAction>
 
-                    <div className="relative my-2">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t dark:border-gray-700" />
-                      </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-background px-2 text-muted-foreground">
-                          Or select individual user
-                        </span>
-                      </div>
+                  <div className="relative my-2">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t dark:border-gray-700" />
                     </div>
-
-                    {roomMembers.map((member) => (
-                      <AlertDialogAction
-                        key={member._id}
-                        onClick={() => handleMarkAsPaid(member.userId)}
-                        className="w-full bg-gray-100 hover:bg-gray-200 
-                          dark:bg-gray-800 dark:hover:bg-gray-700 text-white"
-                      >
-                        Mark {member.userName}'s Payments
-                      </AlertDialogAction>
-                    ))}
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Or select individual user
+                      </span>
+                    </div>
                   </div>
 
-                  <AlertDialogFooter>
-                    <AlertDialogCancel className="border-gray-200 dark:border-gray-700">
-                      Cancel
-                    </AlertDialogCancel>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                  {roomMembers.map((member) => (
+                    <AlertDialogAction
+                      key={member._id}
+                      onClick={() => handleMarkAsPaid(member.userId)}
+                      className="w-full bg-gray-100 hover:bg-gray-200 
+                          dark:bg-gray-800 dark:hover:bg-gray-700 text-white"
+                    >
+                      Mark {member.userName}'s Payments
+                    </AlertDialogAction>
+                  ))}
+                </div>
+
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="border-gray-200 dark:border-gray-700">
+                    Cancel
+                  </AlertDialogCancel>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         ) : (
           // Desktop Horizontal Layout
@@ -721,10 +756,15 @@ const RoomEntries = () => {
             </div>
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Content Section */}
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border">
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border"
+      >
         <div className="p-4 border-b">
           <h2 className="text-xl font-semibold">Room Entries</h2>
         </div>
@@ -855,143 +895,160 @@ const RoomEntries = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {rows.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="px-6 py-8 text-center text-gray-500"
+                <AnimatePresence>
+                  {rows.length === 0 ? (
+                    <motion.tr
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
                     >
-                      No transactions found
-                    </td>
-                  </tr>
-                ) : (
-                  rows.map((row) => (
-                    <tr
-                      key={row._id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {formatDate(new Date(row.date))}
+                      <td
+                        colSpan={7}
+                        className="px-6 py-8 text-center text-gray-500"
+                      >
+                        No transactions found
                       </td>
-                      <td className="px-6 py-4 text-sm">
-                        {row.members.find(
-                          (member) => member.userId === row.paidBy
-                        )?.userName || "Unknown"}
-                      </td>
-                      <td className="px-6 py-4 text-sm">{row.description}</td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                        ₹{row.amount.toLocaleString("en-IN")}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {(() => {
-                          const currentUserMember = row.members.find(
-                            (member) => member.userId === currentUser.userId
-                          );
-                          if (currentUserMember?.isPending) {
-                            return (
-                              <div className="flex items-center text-yellow-500 dark:text-yellow-400">
-                                <CircleDashed className="w-4 h-4 mr-2" />
-                                <span>Pending</span>
-                              </div>
+                    </motion.tr>
+                  ) : (
+                    rows.map((row, index) => (
+                      <motion.tr
+                        key={row._id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.2, delay: index * 0.05 }}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {formatDate(new Date(row.date))}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          {row.members.find(
+                            (member) => member.userId === row.paidBy
+                          )?.userName || "Unknown"}
+                        </td>
+                        <td className="px-6 py-4 text-sm">{row.description}</td>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                          ₹{row.amount.toLocaleString("en-IN")}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          {(() => {
+                            const currentUserMember = row.members.find(
+                              (member) => member.userId === currentUser.userId
                             );
-                          } else if (currentUserMember?.paidStatus) {
-                            return (
-                              <div className="flex items-center text-green-500 dark:text-green-400">
-                                <CircleCheck className="w-4 h-4 mr-2" />
-                                <span>Paid</span>
-                              </div>
-                            );
-                          } else if (
-                            currentUserMember &&
-                            !currentUserMember.paidStatus
-                          ) {
-                            return (
-                              <button
-                                onClick={() => handleUpdateEntry(row)}
-                                className="inline-flex items-center px-3 py-1 rounded-md text-sm
+                            if (currentUserMember?.isPending) {
+                              return (
+                                <div className="flex items-center text-yellow-500 dark:text-yellow-400">
+                                  <CircleDashed className="w-4 h-4 mr-2" />
+                                  <span>Pending</span>
+                                </div>
+                              );
+                            } else if (currentUserMember?.paidStatus) {
+                              return (
+                                <div className="flex items-center text-green-500 dark:text-green-400">
+                                  <CircleCheck className="w-4 h-4 mr-2" />
+                                  <span>Paid</span>
+                                </div>
+                              );
+                            } else if (
+                              currentUserMember &&
+                              !currentUserMember.paidStatus
+                            ) {
+                              return (
+                                <button
+                                  onClick={() => handleUpdateEntry(row)}
+                                  className="inline-flex items-center px-3 py-1 rounded-md text-sm
                           bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 
                           dark:text-blue-400 dark:hover:bg-blue-900/50 transition-colors"
-                              >
-                                <HandCoins className="w-4 h-4 mr-1" />
-                                Pay ₹
-                                {Math.round(
-                                  row.amount / row.members.length
-                                ).toLocaleString("en-IN")}
-                              </button>
-                            );
-                          }
-                        })()}
-                      </td>
-                      <td className="px-6 py-4">
-                        {row.paidBy === currentUser.userId &&
-                          row.members.filter(
-                            (member) =>
-                              member.paidStatus &&
-                              member.userId !== currentUser.userId
-                          ).length === 0 && (
-                            <button
-                              onClick={() => handleDeleteClick(row._id)}
-                              className="inline-flex items-center p-2 text-red-600 hover:text-red-800 
-                      dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <button
-                              className="inline-flex items-center px-3 py-1 rounded-md text-sm
-                      bg-gray-50 text-gray-700 hover:bg-gray-100 dark:bg-gray-800 
-                      dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
-                            >
-                              <Info className="w-4 h-4 mr-1" />
-                              View Split
-                            </button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-md">
-                            <DialogHeader>
-                              <DialogTitle className="flex items-center space-x-2">
-                                <span>Split Details</span>
-                                <span className="text-sm font-normal text-gray-500">
-                                  (₹{row.amount.toLocaleString("en-IN")})
-                                </span>
-                              </DialogTitle>
-                            </DialogHeader>
-                            <div className="grid grid-cols-2 gap-4 py-4">
-                              {row.members.map((member, idx) => (
-                                <div
-                                  key={idx}
-                                  className={`flex items-center justify-between p-3 rounded-lg ${
-                                    member.paidStatus
-                                      ? "bg-green-50 dark:bg-green-900/20"
-                                      : "bg-gray-50 dark:bg-gray-800"
-                                  }`}
                                 >
-                                  <div className="flex items-center space-x-2">
-                                    {member.paidStatus ? (
-                                      <CircleCheck className="w-4 h-4 text-green-500" />
-                                    ) : (
-                                      <Circle className="w-4 h-4 text-gray-400" />
-                                    )}
-                                    <span>{member.userName}</span>
-                                  </div>
-                                  <span className="font-medium">
-                                    ₹
-                                    {Math.round(
-                                      row.amount / row.members.length
-                                    ).toLocaleString("en-IN")}
-                                  </span>
+                                  <HandCoins className="w-4 h-4 mr-1" />
+                                  Pay ₹
+                                  {Math.round(
+                                    row.amount / row.members.length
+                                  ).toLocaleString("en-IN")}
+                                </button>
+                              );
+                            }
+                          })()}
+                        </td>
+                        <td className="px-6 py-4">
+                          {row.paidBy === currentUser.userId &&
+                            row.members.filter(
+                              (member) =>
+                                member.paidStatus &&
+                                member.userId !== currentUser.userId
+                            ).length === 0 && (
+                              <button
+                                onClick={() => handleDeleteClick(row._id)}
+                                className="inline-flex items-center p-2 text-red-600 hover:text-red-800 
+                      dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <button
+                                className="inline-flex items-center px-3 py-1 rounded-md text-sm
+                                  bg-gray-50 text-gray-700 hover:bg-gray-100 dark:bg-gray-800 
+                                  dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+                              >
+                                <Info className="w-4 h-4 mr-1" />
+                                View Split
+                              </button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-md">
+                              <motion.div
+                                variants={dialogVariants}
+                                initial="hidden"
+                                animate="visible"
+                                exit="hidden"
+                              >
+                                <DialogHeader>
+                                  <DialogTitle className="flex items-center space-x-2">
+                                    <span>Split Details</span>
+                                    <span className="text-sm font-normal text-gray-500">
+                                      (₹{row.amount.toLocaleString("en-IN")})
+                                    </span>
+                                  </DialogTitle>
+                                </DialogHeader>
+                                <div className="grid grid-cols-2 gap-4 py-4">
+                                  {row.members.map((member, idx) => (
+                                    <div
+                                      key={idx}
+                                      className={`flex items-center justify-between p-3 rounded-lg ${
+                                        member.paidStatus
+                                          ? "bg-green-50 dark:bg-green-900/20"
+                                          : "bg-gray-50 dark:bg-gray-800"
+                                      }`}
+                                    >
+                                      <div className="flex items-center space-x-2">
+                                        {member.paidStatus ? (
+                                          <CircleCheck className="w-4 h-4 text-green-500" />
+                                        ) : (
+                                          <Circle className="w-4 h-4 text-gray-400" />
+                                        )}
+                                        <span>{member.userName}</span>
+                                      </div>
+                                      <span className="font-medium">
+                                        ₹
+                                        {Math.round(
+                                          row.amount / row.members.length
+                                        ).toLocaleString("en-IN")}
+                                      </span>
+                                    </div>
+                                  ))}
                                 </div>
-                              ))}
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                              </motion.div>
+                            </DialogContent>
+                          </Dialog>
+                        </td>
+                      </motion.tr>
+                    ))
+                  )}
+                </AnimatePresence>
               </tbody>
               <tfoot className="bg-gray-50 dark:bg-gray-800 font-semibold">
                 <tr>
@@ -1009,9 +1066,14 @@ const RoomEntries = () => {
             </table>
           </div>
         )}
-      </div>
+      </motion.div>
 
-      <div className="w-full mt-4">
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.4 }}
+        className="w-full mt-4"
+      >
         <Pagination>
           <PaginationContent className="flex flex-wrap items-center justify-center gap-2">
             {/* Previous Button */}
@@ -1149,9 +1211,8 @@ const RoomEntries = () => {
             </PaginationItem>
           </PaginationContent>
         </Pagination>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
-};
-
-export default RoomEntries;
+}
+  export default RoomEntries;

@@ -35,6 +35,18 @@ import { Skeleton } from "../../ui/skeleton";
 import { Button } from "../../ui/button";
 import { useBreakpoint } from "../../../hooks/useBreakpoint";
 import { MobileView } from "./MobileView";
+import { motion, AnimatePresence } from "framer-motion";
+
+const skeletonVariants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+};
+
+const dialogVariants = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: { opacity: 1, scale: 1 },
+};
 
 const MyEntries = () => {
   const pageLimit = 10;
@@ -95,9 +107,18 @@ const MyEntries = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="container mx-auto px-4 py-8"
+    >
       {/* Header Section */}
-      <div className="flex justify-between items-center mb-8">
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.1 }}
+        className="flex justify-between items-center mb-8"
+      >
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             My Transactions
@@ -106,12 +127,23 @@ const MyEntries = () => {
             View your personal transaction history
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Content Section */}
-      <div className="rounded-lg border shadow-sm bg-white dark:bg-gray-900">
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="rounded-lg border shadow-sm bg-white dark:bg-gray-900"
+      >
         {loading ? (
-          <div className="relative w-full overflow-auto">
+          <motion.div
+            variants={skeletonVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="relative w-full overflow-auto"
+          >
             <h2 className="mb-2">My Entries</h2>
             <div className="overflow-x-auto">
               <table className="w-full table-auto min-w-max">
@@ -166,7 +198,7 @@ const MyEntries = () => {
                 <Skeleton key={index} className="h-8 w-8" />
               ))}
             </div>
-          </div>
+          </motion.div>
         ) : isMobile ? (
           <MobileView rows={rows} />
         ) : (
@@ -201,111 +233,130 @@ const MyEntries = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {rows.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      className="px-6 py-8 text-center text-gray-500 dark:text-gray-400"
+                <AnimatePresence>
+                  {rows.length === 0 ? (
+                    <motion.tr
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
                     >
-                      No transactions found
-                    </td>
-                  </tr>
-                ) : (
-                  rows.map((row) => (
-                    <tr
-                      key={row._id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        {formatDate(new Date(row.date))}
+                      <td
+                        colSpan={4}
+                        className="px-6 py-8 text-center text-gray-500 dark:text-gray-400"
+                      >
+                        No transactions found
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                        {row.description}
-                      </td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                        ₹{row.amount.toLocaleString("en-IN")}
-                      </td>
-                      <td className="px-6 py-4">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <button
-                              className="inline-flex items-center px-3 py-1.5 rounded-md text-sm
+                    </motion.tr>
+                  ) : (
+                    rows.map((row, index) => (
+                      <motion.tr
+                        key={row._id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.2, delay: index * 0.05 }}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                          {formatDate(new Date(row.date))}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                          {row.description}
+                        </td>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                          ₹{row.amount.toLocaleString("en-IN")}
+                        </td>
+                        <td className="px-6 py-4">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <button
+                                className="inline-flex items-center px-3 py-1.5 rounded-md text-sm
                             bg-gray-50 text-gray-700 hover:bg-gray-100 
                             dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 
                             transition-colors"
-                            >
-                              <Info className="w-4 h-4 mr-1.5" />
-                              View Split
-                            </button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-md">
-                            <DialogHeader>
-                              <DialogTitle className="flex items-center space-x-2">
-                                <span>Split Details</span>
-                                <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
-                                  (₹{row.amount.toLocaleString("en-IN")})
-                                </span>
-                              </DialogTitle>
-                            </DialogHeader>
-                            <div className="grid gap-2 py-4">
-                              {row.members.map((member, idx) => (
-                                <div
-                                  key={idx}
-                                  className={`flex items-center justify-between p-3 rounded-lg ${
-                                    member.paidStatus
-                                      ? "bg-green-50 dark:bg-green-900/20"
-                                      : "bg-gray-50 dark:bg-gray-800"
-                                  }`}
-                                >
-                                  <div className="flex items-center space-x-2">
-                                    {member.paidStatus ? (
-                                      <CircleCheck className="w-4 h-4 text-green-500" />
-                                    ) : (
-                                      <Circle className="w-4 h-4 text-gray-400" />
-                                    )}
-                                    <span className="text-gray-900 dark:text-gray-100">
-                                      {member.userName}
+                              >
+                                <Info className="w-4 h-4 mr-1.5" />
+                                View Split
+                              </button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-md">
+                              <motion.div
+                                variants={dialogVariants}
+                                initial="hidden"
+                                animate="visible"
+                                exit="hidden"
+                              >
+                                <DialogHeader>
+                                  <DialogTitle className="flex items-center space-x-2">
+                                    <span>Split Details</span>
+                                    <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                                      (₹{row.amount.toLocaleString("en-IN")})
                                     </span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium text-gray-900 dark:text-gray-100">
-                                      ₹
-                                      {Math.round(
-                                        row.amount / row.members.length
-                                      ).toLocaleString("en-IN")}
-                                    </span>
-                                    <span
-                                      className={`px-2 py-0.5 rounded-full text-xs ${
+                                  </DialogTitle>
+                                </DialogHeader>
+                                <div className="grid gap-2 py-4">
+                                  {row.members.map((member, idx) => (
+                                    <div
+                                      key={idx}
+                                      className={`flex items-center justify-between p-3 rounded-lg ${
                                         member.paidStatus
-                                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                                          : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                                          ? "bg-green-50 dark:bg-green-900/20"
+                                          : "bg-gray-50 dark:bg-gray-800"
                                       }`}
                                     >
-                                      {member.paidStatus ? "Paid" : "Unpaid"}
-                                    </span>
-                                  </div>
+                                      <div className="flex items-center space-x-2">
+                                        {member.paidStatus ? (
+                                          <CircleCheck className="w-4 h-4 text-green-500" />
+                                        ) : (
+                                          <Circle className="w-4 h-4 text-gray-400" />
+                                        )}
+                                        <span className="text-gray-900 dark:text-gray-100">
+                                          {member.userName}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-medium text-gray-900 dark:text-gray-100">
+                                          ₹
+                                          {Math.round(
+                                            row.amount / row.members.length
+                                          ).toLocaleString("en-IN")}
+                                        </span>
+                                        <span
+                                          className={`px-2 py-0.5 rounded-full text-xs ${
+                                            member.paidStatus
+                                              ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                              : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                                          }`}
+                                        >
+                                          {member.paidStatus
+                                            ? "Paid"
+                                            : "Unpaid"}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  ))}
                                 </div>
-                              ))}
-                            </div>
-                            <DialogDescription className="text-sm text-gray-500 dark:text-gray-400 pt-2 border-t dark:border-gray-700">
-                              Created on{" "}
-                              {new Date(row.createdAt).toLocaleDateString(
-                                "en-GB",
-                                {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              )}
-                            </DialogDescription>
-                          </DialogContent>
-                        </Dialog>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                                <DialogDescription className="text-sm text-gray-500 dark:text-gray-400 pt-2 border-t dark:border-gray-700">
+                                  Created on{" "}
+                                  {new Date(row.createdAt).toLocaleDateString(
+                                    "en-GB",
+                                    {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    }
+                                  )}
+                                </DialogDescription>
+                              </motion.div>
+                            </DialogContent>
+                          </Dialog>
+                        </td>
+                      </motion.tr>
+                    ))
+                  )}
+                </AnimatePresence>
               </tbody>
               <tfoot className="bg-gray-50 dark:bg-gray-800 font-semibold">
                 <tr>
@@ -327,7 +378,12 @@ const MyEntries = () => {
         )}
 
         {/* Pagination Section */}
-        <div className="p-4 border-t dark:border-gray-800">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="p-4 border-t dark:border-gray-800"
+        >
           <Pagination>
             <PaginationContent className="flex flex-wrap items-center justify-center gap-2">
               {/* Previous Button */}
@@ -465,9 +521,9 @@ const MyEntries = () => {
               </PaginationItem>
             </PaginationContent>
           </Pagination>
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 };
 
