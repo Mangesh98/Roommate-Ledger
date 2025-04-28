@@ -68,7 +68,7 @@ import { setCurrentUser } from "../../../store/userSlice";
 import { Skeleton } from "../../ui/skeleton";
 import { DateRange } from "react-day-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover";
-import { format, set } from "date-fns";
+import { format} from "date-fns";
 import { Calendar } from "../../ui/calendar";
 import { getRoomDetailsAction } from "../../../api/room";
 import { useBreakpoint } from "../../../hooks/useBreakpoint";
